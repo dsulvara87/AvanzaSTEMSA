@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>🌍 Laboratorio de Investigación Ambiental — Unidad Completa</title>
+<style>
+  :root{
+    --bg:#07121b; --card:#0f2a2a; --accent:#00b07a; --accent2:#2fb6ff; --soft:#dff8f0; --muted:#9fc1b3; --danger:#e74c3c;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:Inter, 'Segoe UI', Roboto, Arial, sans-serif;
+    background: linear-gradient(180deg,#041019 0%, #07131a 100%);
+    color:var(--soft); -webkit-font-smoothing:antialiased;
+  }
+  header{padding:28px 18px; text-align:center; border-bottom:4px solid rgba(0,176,122,0.12);}
+  header h1{margin:0; font-size:2rem; color:#e9fff5}
+  header p{margin:6px 0 0; color:var(--muted)}
+  .container{max-width:1100px; margin:22px auto; padding:18px;}
+  .module{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); padding:18px; border-radius:12px; margin-bottom:18px; border:1px solid rgba(255,255,255,0.03); box-shadow:0 8px 30px rgba(2,10,12,0.5);}
+  h2{color:var(--accent); margin-top:0}
+  h3{color:var(--accent2)}
+  .lead{color:var(--muted); margin-top:6px}
+  button{background:linear-gradient(90deg,var(--accent),var(--accent2)); color:#021217; border:none; padding:10px 14px; border-radius:10px; font-weight:700; cursor:pointer; transition:transform .12s, box-shadow .12s;}
+  button.secondary{background:transparent;color:var(--soft); border:1px solid rgba(255,255,255,0.04);}
+  button.gray{background:#2a2f33;color:#e9fff5}
+  textarea,input[type="text"],select{width:100%; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.04); background:#061219; color:var(--soft); margin-top:8px}
+  .status-bar{display:flex; gap:12px; align-items:center; margin:16px 0}
+  .status-item{flex:1; background:rgba(255,255,255,0.02); padding:12px; border-radius:10px; text-align:center}
+  .progress-track{height:12px; background:rgba(255,255,255,0.02); border-radius:8px; overflow:hidden; margin-top:8px}
+  .progress-fill{height:100%; width:0%; background:linear-gradient(90deg,var(--accent),var(--accent2)); transition:width .5s}
+  #interactive-map{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; width:100%; aspect-ratio:16/9; background:rgba(0,0,0,0.14); padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.02)}
+  .map-cell{background:rgba(0,0,0,0.18); border-radius:8px; display:flex; align-items:center; justify-content:center; position:relative; cursor:pointer; padding:8px; transition:transform .12s, background .12s}
+  .map-cell:hover{transform:translateY(-4px); background:rgba(255,255,255,0.02)}
+  .map-point{font-size:1.6rem}
+  .map-label{position:absolute; bottom:6px; left:8px; font-size:0.75rem; opacity:0.9; color:var(--muted)}
+  #m2-game-area{position:relative; height:320px; border-radius:10px; overflow:hidden; background:linear-gradient(180deg,#02131a,#04202a); border:1px solid rgba(255,255,255,0.02)}
+  .pollution-icon{position:absolute; font-size:1.8rem; cursor:pointer; user-select:none; transition:transform .12s, opacity .4s}
+  .grow{animation:growAndShrink 1.4s infinite alternate}
+  @keyframes growAndShrink{from{transform:scale(1)}to{transform:scale(1.16)}}
+  .m3-areas{display:flex; gap:12px; flex-wrap:wrap}
+  .dropzone{flex:1; min-width:200px; min-height:100px; background:rgba(255,255,255,0.02); border:2px dashed rgba(255,255,255,0.03); border-radius:8px; display:flex; align-items:center; justify-content:center; color:var(--muted); padding:8px; transition:background .18s, border-color .18s}
+  .dropzone.solved{background:linear-gradient(90deg,#003b27,#005b4a); border-style:solid; color:#e9fff2}
+  .draggables{display:flex; gap:12px; flex-wrap:wrap}
+  .draggable{padding:10px 12px; background:rgba(0,0,0,0.18); border-radius:8px; border:1px solid rgba(255,255,255,0.03); cursor:grab}
+  .history-row{padding:8px; border-bottom:1px solid rgba(255,255,255,0.02); color:var(--muted); display:flex; justify-content:space-between; align-items:center}
+  .flex{display:flex; gap:12px; align-items:center}
+  footer{color:var(--muted); text-align:center; padding:12px; margin-top:8px}
+  .hidden{display:none}
+  .badge{background:rgba(255,255,255,0.03); padding:6px 10px; border-radius:999px; color:var(--muted); font-weight:700}
+  .cert-name{max-width:400px; display:inline-block; margin-left:8px}
+  .small{font-size:0.9rem; color:var(--muted)}
+  .reading{background:rgba(255,255,255,0.01); padding:12px; border-radius:8px; max-height:360px; overflow:auto; margin-top:10px; border:1px solid rgba(255,255,255,0.02)}
+  @media (max-width:820px){ #interactive-map{grid-template-columns:repeat(2,1fr)} .m3-areas{flex-direction:column} }
+</style>
+</head>
+<body>
+<header>
+  <h1>Laboratorio de Investigación Ambiental</h1>
+  <p class="lead">Unidad Didáctica completa: Introducción, lecturas profundas, experimentos y soluciones.</p>
+</header>
+
+<div class="container">
+
+  <!-- Módulo de Introducción -->
+  <div class="module" id="intro">
+    <h2>Módulo de Introducción: Energía y Ambiente (Lectura extendida)</h2>
+    <p class="lead">Esta lectura explica las diferencias entre fuentes energéticas, los problemas asociados y las soluciones prácticas aplicables a ciudades como Bogotá.</p>
+
+    <div class="reading" id="intro-reading">
+      <h3>1. Fuentes de energía: renovables y no renovables</h3>
+      <p>
+        Las fuentes de energía se dividen principalmente en <strong>renovables</strong> y <strong>no renovables</strong>. Las renovables (solar, eólica, hidráulica, biomasa) se regeneran naturalmente
+        y producen bajas emisiones de gases de efecto invernadero. Las no renovables (carbón, petróleo, gas natural) son finitas y su combustión libera CO₂, material particulado y otros contaminantes.
+      </p>
+      <p>
+        Ejemplo: Un parque fotovoltaico de 1 MW puede evitar la emisión de aproximadamente 1.2 toneladas de CO₂ por MWh en comparación con generación a base de combustibles fósiles, dependiendo de la matriz eléctrica.
+      </p>
+
+      <h3>2. Problemas relacionados con la energía</h3>
+      <p>
+        A nivel urbano, los problemas más relevantes son: la alta dependencia de combustibles fósiles para transporte y generación, emisiones locales (PM2.5, NOx),
+        pérdidas en redes de distribución, y desigualdad en el acceso a fuentes limpias. Las ciudades con tráfico intenso presentan puntos críticos de contaminación que afectan la salud pública.
+      </p>
+      <p>
+        Datos (ejemplo ilustrativo): según diversos informes internacionales, la exposición crónica a PM2.5 está relacionada con un aumento de riesgo de enfermedades respiratorias y cardiovasculares.
+        En áreas urbanas, medidas de mitigación como electrificación del transporte y filtros industriales han mostrado reducciones inmediatas en niveles de PM2.5.
+      </p>
+
+      <h3>3. Soluciones prácticas y ejemplos</h3>
+      <p>
+        - <strong>Electrificación del transporte:</strong> buses eléctricos y estaciones de recarga para taxis reducen emisiones locales.
+        - <strong>Generación distribuida con solar:</strong> colegios y edificios públicos con paneles solares reducen demanda punta y mejoran resiliencia.
+        - <strong>Filtros y mejores prácticas industriales:</strong> instalación de sistemas de filtrado y controles en chimeneas reducen partículas emitidas.
+      </p>
+      <p>
+        Caso de ejemplo: La implementación de buses eléctricos en una ruta densa puede reducir emisiones locales en más del 30% en los tramos cubiertos, mejorando la calidad del aire para los usuarios y vecinos.
+      </p>
+
+      <h3>4. Competencias e indicadores</h3>
+      <ul>
+        <li>Identificar fuentes energéticas y su impacto. <span class="small">Indicador: clasifica correctamente 4 fuentes y explica 2 impactos.</span></li>
+        <li>Analizar un problema local y proponer soluciones. <span class="small">Indicador: propone 2 medidas con factibilidad básica.</span></li>
+        <li>Redactar un reporte científico breve. <span class="small">Indicador: estructura un reporte con secciones básicas.</span></li>
+      </ul>
+      <p class="small">Lectura extensa: toma tu tiempo para leer y comprender. Cuando termines, pulsa "✅ He leído, continuar" para desbloquear el Módulo 1.</p>
+    </div>
+
+    <div style="margin-top:12px;">
+      <button onclick="markRead('intro')">✅ He leído, continuar</button>
+      <button class="secondary" onclick="downloadReading('Introduccion - Energía y Ambiente', document.getElementById('intro-reading').innerText)">Descargar lectura</button>
+    </div>
+  </div>
+
+  <!-- Barra de estado e historial + export -->
+  <div class="status-bar">
+    <div class="status-item">
+      <div class="flex"><div class="badge">AIRE</div><strong style="margin-left:8px">Calidad (PM2.5)</strong></div>
+      <div class="progress-track"><div id="pollution-status" class="progress-fill" style="width:80%"></div></div>
+      <div id="pollution-level" class="small">Estado: Crítico</div>
+    </div>
+
+    <div class="status-item">
+      <div class="flex"><div class="badge">ENERGÍA</div><strong style="margin-left:8px">Energía limpia</strong></div>
+      <div class="progress-track"><div id="energy-status" class="progress-fill" style="width:20%"></div></div>
+      <div id="energy-level" class="small">Estado: Bajo</div>
+    </div>
+
+    <div class="status-item">
+      <strong>Progreso</strong>
+      <div class="progress-track"><div id="global-progress" class="progress-fill" style="width:0%"></div></div>
+      <div id="progress-text" class="small">0 / 5 módulos</div>
+      <div style="margin-top:8px" class="flex">
+        <button class="secondary" onclick="exportHistoryCSV()">Exportar CSV</button>
+        <button class="secondary" onclick="exportHistoryTXT()">Exportar TXT</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Módulo 1 -->
+  <div class="module hidden" id="m1">
+    <h2>Módulo 1: Observación y Formulación de Hipótesis</h2>
+    <p class="lead">Lectura previa (datos y contexto) y actividad práctica.</p>
+
+    <div class="reading" id="m1-reading">
+      <h3>Contaminación del aire en ciudades: enfoque en Bogotá</h3>
+      <p>
+        La contaminación atmosférica en ciudades latinoamericanas suele tener fuentes múltiples: transporte, industria, quema de residuos y actividades de construcción.
+        Un contaminante crítico es el <strong>PM2.5</strong> (partículas menores a 2.5 micras), capaz de penetrar profundamente en los pulmones y entrar en el torrente sanguíneo.
+      </p>
+      <p>
+        Datos relevantes (ejemplo): mediciones de estaciones urbanas muestran fluctuaciones diarias con picos en horas de mayor tráfico. En barrios con alta densidad vehicular, las concentraciones pueden superar los límites recomendados por la OMS.
+      </p>
+      <p>
+        Ejemplo concreto: en algunas localidades, las concentraciones promedio anuales de PM2.5 estuvieron por encima del límite recomendado, lo que incrementa la carga de enfermedades respiratorias en la población infantil y anciana.
+      </p>
+      <p>
+        Antes de formular una hipótesis, observa: ¿qué fuentes podrías identificar en tu mapa local? ¿Qué evidencia (olor, polvo, humo, actividad industrial) apoya tu hipótesis?
+      </p>
+      <p class="small">Al terminar la lectura, presiona "✅ He leído, continuar" para abrir el mapa interactivo.</p>
+    </div>
+
+    <div style="margin-top:8px;">
+      <button onclick="markRead('m1')">✅ He leído, continuar</button>
+      <button class="secondary" onclick="downloadReading('Módulo1 - Contaminacion del aire', document.getElementById('m1-reading').innerText)">Descargar lectura</button>
+    </div>
+
+    <hr>
+
+    <div id="m1-activity" class="hidden">
+      <p class="small">Actividad práctica: haz clic en 3 sectores del mapa para registrar evidencias.</p>
+      <div id="interactive-map"></div>
+      <p id="m1res">Sectores investigados: 0/3</p>
+
+      <label for="evidence">Evidencias observadas (breve):</label>
+      <textarea id="evidence" rows="3" placeholder="Anota observaciones: tráfico denso, chimeneas, fogatas..."></textarea>
+
+      <label for="m1input">Mi hipótesis (con causa principal):</label>
+      <textarea id="m1input" rows="3" placeholder="Mi hipótesis es que la principal causa de la contaminación es..." disabled></textarea>
+
+      <div style="margin-top:10px;">
+        <button onclick="checkAnswer(1)">Formular Hipótesis</button>
+        <button class="secondary" onclick="resetMap()">Reset mapa</button>
+        <span id="m1feedback" style="margin-left:12px;"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Módulo 2 -->
+  <div class="module hidden" id="m2">
+    <h2>Módulo 2: Experimentación y Prueba de Hipótesis</h2>
+    <p class="lead">Lectura previa (impacto de emisiones) y experimento.</p>
+
+    <div class="reading" id="m2-reading">
+      <h3>Emisiones del transporte e industria: impactos y evidencia</h3>
+      <p>
+        El transporte (vehículos livianos y pesados) es una fuente principal de NOx, CO y material particulado en zonas urbanas. Las industrias, especialmente las que usan combustibles fósiles y procesos a alta temperatura,
+        generan emisiones de partículas, óxidos de azufre y compuestos orgánicos volátiles.
+      </p>
+      <p>
+        Estudios locales muestran que en horarios punta las emisiones por tráfico incrementan las concentraciones de PM2.5 y de gases nocivos. Las zonas cercanas a corredores industriales presentan peores indicadores en días de baja dispersión atmosférica.
+      </p>
+      <p>
+        Mitigaciones efectivas: control de emisiones vehiculares, revisión técnico-mecánica, filtros industriales, priorización del transporte público limpio y políticas de restricción de vehículos en días críticos.
+      </p>
+      <p class="small">Después de leer, pulsa "✅ He leído, continuar" para realizar el experimento virtual.</p>
+    </div>
+
+    <div style="margin-top:8px;">
+      <button onclick="markRead('m2')">✅ He leído, continuar</button>
+      <button class="secondary" onclick="downloadReading('Módulo2 - Emisiones', document.getElementById('m2-reading').innerText)">Descargar lectura</button>
+    </div>
+
+    <hr>
+
+    <div id="m2-activity" class="hidden">
+      <p class="small">Simula la limpieza: clics en iconos para reducir polución. Tiempo: <b>25s</b>. Necesitas <b>100</b> puntos para aprobar.</p>
+      <p>💨 Emisiones Ligeras (+5) | 🏭 Emisiones Industriales (+15) | 🌩️ Smog (+20, requiere 2 clics)</p>
+
+      <div id="m2-game-area"></div>
+      <p id="m2-res"></p>
+      <p>Tiempo restante: <span id="m2-timer">25</span> s — Puntos: <span id="m2-score">0</span></p>
+      <div style="margin-top:10px;">
+        <button onclick="startM2Game()" id="m2-start-btn">Comenzar Experimento</button>
+        <button class="secondary" onclick="forzarAprobacionM2()">Forzar (debug)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Módulo 3 -->
+  <div class="module hidden" id="m3">
+    <h2>Módulo 3: Análisis y Propuesta de Solución</h2>
+    <p class="lead">Lectura previa (casos reales) y rompecabezas práctico.</p>
+
+    <div class="reading" id="m3-reading">
+      <h3>Casos reales y soluciones aplicadas</h3>
+      <p>
+        <strong>Buses eléctricos:</strong> La electrificación del transporte público reduce emisiones locales y ruido. En rutas con alta demanda, reemplazar buses diésel por eléctricos mejora la calidad del aire local.
+      </p>
+      <p>
+        <strong>Paneles solares en instituciones:</strong> Implementar sistemas solares en colegios y centros de salud reduce la demanda de la red en horas punta y sirve como proyecto educativo.
+      </p>
+      <p>
+        <strong>Filtros y control industrial:</strong> Aplicar filtros y mejoras en procesos industriales disminuye la emisión de partículas y compuestos peligrosos. Programas de monitoreo y auditoría ambiental aseguran cumplimiento.
+      </p>
+      <p class="small">Tras la lectura, pulsa "✅ He leído, continuar" para resolver el rompecabezas y proponer un plan coherente.</p>
+    </div>
+
+    <div style="margin-top:8px;">
+      <button onclick="markRead('m3')">✅ He leído, continuar</button>
+      <button class="secondary" onclick="downloadReading('Módulo3 - Casos reales', document.getElementById('m3-reading').innerText)">Descargar lectura</button>
+    </div>
+
+    <hr>
+
+    <div id="m3-activity" class="hidden">
+      <p class="small">Arrastra las soluciones a cada problema. Debes resolver correctamente las 3 zonas para avanzar.</p>
+
+      <div class="m3-areas">
+        <div style="flex:1; min-width:220px;">
+          <p><strong>Problema: Tráfico</strong></p>
+          <div class="dropzone" id="drop-trafico">Arrastra la solución aquí</div>
+        </div>
+        <div style="flex:1; min-width:220px;">
+          <p><strong>Problema: Industria</strong></p>
+          <div class="dropzone" id="drop-industria">Arrastra la solución aquí</div>
+        </div>
+        <div style="flex:1; min-width:220px;">
+          <p><strong>Problema: Energía</strong></p>
+          <div class="dropzone" id="drop-energia">Arrastra la solución aquí</div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <p><strong>Soluciones disponibles</strong></p>
+        <div class="draggables">
+          <div class="draggable" id="item-bus" draggable="true">🚌 Transporte eléctrico</div>
+          <div class="draggable" id="item-filtro" draggable="true">🧪 Filtros industriales</div>
+          <div class="draggable" id="item-solar" draggable="true">☀️ Energía solar</div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <button onclick="checkAnswer(3)">Implementar Plan</button>
+        <span id="m3-res" style="margin-left:12px;"></span>
+        <p class="small">Intentos en este rompecabezas: <span id="m3-attempts">0</span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Módulo 4 -->
+  <div class="module hidden" id="m4">
+    <h2>Módulo 4: Conclusiones y Reporte</h2>
+    <p class="lead">Lectura previa (estructura del reporte) y actividad: redactar reporte final.</p>
+
+    <div class="reading" id="m4-reading">
+      <h3>Cómo redactar un reporte científico breve</h3>
+      <p>
+        Un reporte científico corto debe contener: <strong>introducción</strong> (planteamiento del problema), <strong>metodología</strong> (qué se hizo),
+        <strong>resultados</strong> (hallazgos), y <strong>conclusiones</strong> (interpretación y recomendaciones).
+      </p>
+      <p>
+        Ejemplo de estructura:
+        <ul>
+          <li><em>Introducción:</em> descripción del problema y contexto.</li>
+          <li><em>Metodología:</em> observación del mapa, experimento de limpieza, rompecabezas de soluciones.</li>
+          <li><em>Resultados:</em> puntos obtenidos, sectores investigados, soluciones elegidas.</li>
+          <li><em>Conclusiones:</em> propuesta final y recomendaciones prácticas.</li>
+        </ul>
+      </p>
+      <p>
+        Mini-ejemplo (resumido): "Hipótesis: el tráfico es la principal causa en X. Experimento: limpieza virtual obtuvo 125 puntos, lo que indica que medidas en transporte tendrían gran impacto.
+        Propuesta: implementar carriles exclusivos y buses eléctricos para la ruta Y."
+      </p>
+      <p class="small">Lee con atención. Luego marca "✅ He leído, continuar" para acceder al textarea del reporte.</p>
+    </div>
+
+    <div style="margin-top:8px;">
+      <button onclick="markRead('m4')">✅ He leído, continuar</button>
+      <button class="secondary" onclick="downloadReading('Módulo4 - Redaccion reporte', document.getElementById('m4-reading').innerText)">Descargar lectura</button>
+    </div>
+
+    <hr>
+
+    <div id="m4-activity" class="hidden">
+      <label for="m4input">Reporte final (mín. 60 palabras, incluye 'hipótesis'):</label>
+      <textarea id="m4input" rows="6" placeholder="Mis hallazgos: ..."></textarea>
+
+      <div style="margin-top:10px;">
+        <button onclick="checkAnswer(4)">Enviar Conclusiones</button>
+        <span id="m4res" style="margin-left:12px;"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Final / Certificado -->
+  <div class="module hidden" id="finalScreen">
+    <h2>🏆 ¡Misión cumplida, Investigador!</h2>
+    <p>Has completado la unidad. Escribe tu nombre para generar el certificado PDF personalizado.</p>
+    <div style="display:flex; gap:8px; align-items:center; margin-top:8px; flex-wrap:wrap;">
+      <input id="cert-name" type="text" placeholder="Escribe tu nombre completo" class="cert-name"/>
+      <button onclick="generatePDF()">Generar certificado PDF</button>
+    </div>
+  </div>
+
+  <!-- Historial de intentos -->
+  <div class="module">
+    <h3>Historial de intentos</h3>
+    <div id="history">No hay registros aún.</div>
+  </div>
+
+  <canvas id="confetti" class="hidden" style="position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:9999"></canvas>
+
+</div>
+
+<footer>
+  Proyecto educativo — Laboratorio de Investigación Ambiental • Desarrollado para aula.
+</footer>
+
+<!-- Librería jsPDF (CDN) para generar PDF en el navegador -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+/* ----------------------------- Configuración global ----------------------------- */
+const REQUIRED_SCORE_M2 = 100;
+const M2_TIME = 25; // segundos
+const state = {
+  completed: {intro:false, m1:false, m2:false, m3:false, m4:false},
+  investigatedPoints:0,
+  currentPollutionProblem:'',
+  m2: {running:false,score:0,timer:M2_TIME,interval:null,spawnInterval:null,smogInterval:null},
+  history: JSON.parse(localStorage.getItem('lab_history')||'[]'),
+  m3: {placed:{trafico:null,industria:null,energia:null}, attempts:0}
+};
+
+/* ----------------------------- Utilidades ----------------------------- */
+function saveHistory(entry){ state.history.unshift(entry); localStorage.setItem('lab_history', JSON.stringify(state.history)); renderHistory(); }
+function renderHistory(){ const h = document.getElementById('history'); if(!state.history || state.history.length===0) { h.innerText='No hay registros aún.'; return; } h.innerHTML = state.history.map((it,i)=>`<div class="history-row"><div><strong>#${state.history.length - i}</strong> ${it.module} — ${it.result}</div><div style="opacity:0.8">${it.time}</div></div>`).join(''); }
+function updateProgress(){ const done = Object.values(state.completed).filter(Boolean).length; const pct = Math.round(done/5*100); document.getElementById('global-progress').style.width = pct + '%'; document.getElementById('progress-text').innerText = `${done} / 5 módulos`; }
+
+/* ----------------------------- Lecturas / desbloqueo ----------------------------- */
+function markRead(id){
+  if(id === 'intro'){ state.completed.intro = true; document.getElementById('intro').classList.add('hidden'); document.getElementById('m1').classList.remove('hidden'); setupMap(); saveHistory({module:'Módulo de Introducción', result:'Lectura completada', time:new Date().toLocaleString()}); updateProgress(); renderHistory(); }
+  if(id === 'm1'){ document.getElementById('m1-activity').classList.remove('hidden'); document.getElementById('m1-reading').scrollTop = 0; saveHistory({module:'Módulo 1', result:'Lectura completada', time:new Date().toLocaleString()}); updateProgress(); renderHistory(); }
+  if(id === 'm2'){ document.getElementById('m2-activity').classList.remove('hidden'); saveHistory({module:'Módulo 2', result:'Lectura completada', time:new Date().toLocaleString()}); updateProgress(); renderHistory(); }
+  if(id === 'm3'){ document.getElementById('m3-activity').classList.remove('hidden'); saveHistory({module:'Módulo 3', result:'Lectura completada', time:new Date().toLocaleString()}); updateProgress(); renderHistory(); }
+  if(id === 'm4'){ document.getElementById('m4-activity').classList.remove('hidden'); saveHistory({module:'Módulo 4', result:'Lectura completada', time:new Date().toLocaleString()}); updateProgress(); renderHistory(); }
+}
+
+/* ----------------------------- Descargar lectura como txt ----------------------------- */
+function downloadReading(title, text){
+  const blob = new Blob([title + "\n\n" + text], { type: "text/plain;charset=utf-8" });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = title.replace(/\s+/g,'_') + '.txt'; a.click();
+}
+
+/* ----------------------------- Módulo 1 (Mapa) ----------------------------- */
+function setupMap(){
+  const map = document.getElementById('interactive-map');
+  map.innerHTML=''; state.investigatedPoints=0;
+  document.getElementById('m1res').innerText = 'Sectores investigados: 0/3';
+
+  const mainSources = ['tráfico','industria'];
+  const secondary = ['residuos','construcción','incendios','quema de biomasa'];
+  const numPoints = 3;
+  const all = Array.from({length:12},(_,i)=>i);
+  const chosen=[];
+  while(chosen.length < numPoints){ const idx = Math.floor(Math.random()*all.length); chosen.push(all.splice(idx,1)[0]); }
+  const mainType = mainSources[Math.floor(Math.random()*mainSources.length)]; state.currentPollutionProblem = mainType;
+  const mainCell = chosen[Math.floor(Math.random()*chosen.length)];
+
+  for(let i=0;i<12;i++){
+    const cell = document.createElement('div'); cell.className='map-cell';
+    if(chosen.includes(i)){
+      if(i===mainCell) cell.innerHTML = `<div class="map-point">🔴</div><div class="map-label">${mainType}</div>`;
+      else { const sec = secondary[Math.floor(Math.random()*secondary.length)]; cell.innerHTML = `<div class="map-point">🔴</div><div class="map-label">${sec}</div>`; }
+      cell.dataset.pollution='true';
+    } else {
+      cell.innerHTML = `<div>Sector ${i+1}</div>`;
+    }
+    cell.addEventListener('click',()=>{
+      if(cell.dataset.pollution && !cell.classList.contains('investigated')){
+        cell.querySelector('.map-point').innerText='🟢';
+        cell.classList.add('investigated');
+        state.investigatedPoints++;
+        document.getElementById('m1res').innerText = `Sectores investigados: ${state.investigatedPoints}/3`;
+        if(state.investigatedPoints>=3) document.getElementById('m1input').disabled=false;
+      }
+    });
+    map.appendChild(cell);
+  }
+}
+function resetMap(){ setupMap(); document.getElementById('evidence').value=''; document.getElementById('m1input').value=''; document.getElementById('m1input').disabled=true; document.getElementById('m1feedback').innerText=''; }
+
+function checkAnswer(m){
+  if(m===1){
+    const hyp = document.getElementById('m1input').value.trim().toLowerCase();
+    if(state.investigatedPoints < 3){ document.getElementById('m1feedback').innerText='❌ Investiga 3 sectores antes.'; return; }
+    if(hyp.length < 10){ document.getElementById('m1feedback').innerText='❌ Escribe una hipótesis más completa (>=10 caracteres)'; return; }
+    if(hyp.includes(state.currentPollutionProblem) || hyp.includes('industr') || hyp.includes('traf')){
+      document.getElementById('m1feedback').innerText='✅ Hipótesis plausible. Desbloqueando experimento...';
+      state.completed.m1=true; updateProgress();
+      saveHistory({module:'Módulo 1', result:'Hipótesis aceptada', time:new Date().toLocaleString()});
+      document.getElementById('m1').classList.add('hidden');
+      setTimeout(()=> { document.getElementById('m2').classList.remove('hidden'); }, 700);
+      celebrate();
+    } else {
+      document.getElementById('m1feedback').innerText='❌ Tu hipótesis no coincide con las evidencias. Revisa.';
+    }
+  }
+
+  if(m===3){
+    state.m3.attempts++; document.getElementById('m3-attempts').innerText = state.m3.attempts;
+    const t = state.m3.placed;
+    let ok = true;
+    if(t.trafico !== 'item-bus') ok=false;
+    if(t.industria !== 'item-filtro') ok=false;
+    if(t.energia !== 'item-solar') ok=false;
+    if(ok){
+      document.getElementById('m3-res').innerText='✅ Plan coherente. Desbloqueando reporte...';
+      document.querySelectorAll('#drop-trafico,#drop-industria,#drop-energia').forEach(d=>d.classList.add('solved'));
+      state.completed.m3=true; updateProgress();
+      saveHistory({module:'Módulo 3', result:'Rompecabezas resuelto', time:new Date().toLocaleString()});
+      setTimeout(()=>{ document.getElementById('m3').classList.add('hidden'); document.getElementById('m4').classList.remove('hidden'); },700);
+      celebrate();
+    } else {
+      document.getElementById('m3-res').innerText='❌ Solución incorrecta. Intenta de nuevo.';
+      saveHistory({module:'Módulo 3', result:'Intento fallido', time:new Date().toLocaleString()});
+    }
+  }
+
+  if(m===4){
+    const txt = document.getElementById('m4input').value.trim();
+    const minWords = 60;
+    if(txt.split(/\s+/).length < minWords){ document.getElementById('m4res').innerText = `❌ Escribe al menos ${minWords} palabras.`; return; }
+    if(!txt.toLowerCase().includes('hipótesis') && !txt.toLowerCase().includes('hipotesis')){ document.getElementById('m4res').innerText='❌ Incluye la hipótesis en tu reporte.'; return; }
+    document.getElementById('m4res').innerText='✅ Reporte enviado. Investigación finalizada.';
+    state.completed.m4=true; updateProgress();
+    saveHistory({module:'Módulo 4', result:'Reporte completado', time:new Date().toLocaleString()});
+    setTimeout(()=>{ document.getElementById('m4').classList.add('hidden'); document.getElementById('finalScreen').classList.remove('hidden'); },700);
+    celebrate(true);
+  }
+}
+
+/* ----------------------------- Módulo 2 (Juego) ----------------------------- */
+const m2Area = document.getElementById('m2-game-area');
+const smogClicks = {};
+
+function startM2Game(){
+  if(state.m2.running) return;
+  state.m2.running = true;
+  state.m2.score = 0;
+  state.m2.timer = M2_TIME;
+  document.getElementById('m2-score').innerText = state.m2.score;
+  document.getElementById('m2-timer').innerText = state.m2.timer;
+  document.getElementById('m2-res').innerText = '';
+  m2Area.innerHTML = '';
+
+  state.m2.interval = setInterval(()=>{ state.m2.timer--; document.getElementById('m2-timer').innerText = state.m2.timer; if(state.m2.timer<=0){ endM2(); } }, 1000);
+
+  // Spawn más rápido para mayor dificultad
+  state.m2.spawnInterval = setInterval(spawnPollution, 650);
+  state.m2.smogInterval = setInterval(growSmog, 1200);
+}
+
+function spawnPollution(){
+  if(!state.m2.running) return;
+  const icon = document.createElement('div');
+  icon.className = 'pollution-icon';
+  icon.style.left = Math.random() * (m2Area.clientWidth - 60) + 'px';
+  icon.style.top = Math.random() * (m2Area.clientHeight - 40) + 'px';
+  const r = Math.random();
+  if(r < 0.55){ icon.innerText = '💨'; icon.dataset.value = '5'; }
+  else if(r < 0.9){ icon.innerText = '🏭'; icon.dataset.value = '15'; }
+  else { icon.innerText = '🌩️'; icon.dataset.value = '20'; icon.dataset.clicks = '0'; icon.dataset.id = 's'+Date.now()+Math.random(); icon.classList.add('grow'); smogClicks[icon.dataset.id] = 0; }
+
+  icon.onclick = ()=>{
+    if(icon.innerText === '🌩️'){
+      smogClicks[icon.dataset.id]++;
+      if(smogClicks[icon.dataset.id] >= 2){
+        state.m2.score += parseInt(icon.dataset.value);
+        if(icon.parentNode) icon.remove(); delete smogClicks[icon.dataset.id];
+      } else { icon.style.transform = 'scale(1.08)'; }
+    } else {
+      state.m2.score += parseInt(icon.dataset.value);
+      if(icon.parentNode) icon.remove();
+    }
+    document.getElementById('m2-score').innerText = state.m2.score;
+    updateStatusBar();
+  };
+
+  m2Area.appendChild(icon);
+  // Remove after 9s to keep área responsiva
+  setTimeout(()=>{ if(icon.parentNode) icon.remove(); }, 9000);
+}
+
+function growSmog(){
+  if(!state.m2.running) return;
+  const smogs = Array.from(m2Area.querySelectorAll('.pollution-icon.grow'));
+  if(smogs.length > 0){
+    state.m2.score = Math.max(0, state.m2.score - 6); // penalización más severa
+    document.getElementById('m2-score').innerText = state.m2.score;
+    updateStatusBar();
+  }
+}
+
+function endM2(){
+  clearInterval(state.m2.interval);
+  clearInterval(state.m2.spawnInterval);
+  clearInterval(state.m2.smogInterval);
+  state.m2.running = false;
+  const success = state.m2.score >= REQUIRED_SCORE_M2;
+  document.getElementById('m2-res').innerText = success? '✅ ¡Lograste limpiar el aire! Experimento exitoso.' : '❌ Se acabó el tiempo. No lograste limpiar suficiente aire.';
+  saveHistory({module:'Módulo 2', result: success ? 'Experimento exitoso' : 'Fallido', time: new Date().toLocaleString()});
+  if(success){ state.completed.m2=true; updateProgress(); setTimeout(()=>{ document.getElementById('m2').classList.add('hidden'); document.getElementById('m3').classList.remove('hidden'); },700); celebrate(); }
+}
+
+function forzarAprobacionM2(){ state.m2.score = REQUIRED_SCORE_M2 + 20; document.getElementById('m2-score').innerText = state.m2.score; endM2(); }
+
+function updateStatusBar(){
+  let pollution = Math.max(0, 80 - state.m2.score);
+  let energy = Math.min(100, 20 + Math.round(state.m2.score / 1.3));
+  document.getElementById('pollution-status').style.width = pollution + '%';
+  document.getElementById('energy-status').style.width = energy + '%';
+  document.getElementById('pollution-level').innerText = pollution < 40 ? 'Estado: Normal 🟢' : 'Estado: Crítico 🔴';
+  document.getElementById('energy-level').innerText = energy > 60 ? 'Estado: Óptimo ⚡' : 'Estado: Bajo';
+}
+
+/* ----------------------------- Módulo 3 Drag & Drop ----------------------------- */
+function setupDragAndDrop(){
+  document.querySelectorAll('.draggable').forEach(d=>{
+    d.addEventListener('dragstart', e=> e.dataTransfer.setData('text/plain', e.target.id));
+  });
+  const zones = ['drop-trafico','drop-industria','drop-energia'];
+  zones.forEach(zid=>{
+    const z = document.getElementById(zid);
+    z.addEventListener('dragover', e=> e.preventDefault());
+    z.addEventListener('drop', e=>{
+      e.preventDefault();
+      const id = e.dataTransfer.getData('text/plain');
+      const el = document.getElementById(id);
+      z.innerText = el ? el.innerText : id;
+      if(zid === 'drop-trafico') state.m3.placed.trafico = id;
+      if(zid === 'drop-industria') state.m3.placed.industria = id;
+      if(zid === 'drop-energia') state.m3.placed.energia = id;
+    });
+  });
+}
+
+/* ----------------------------- Celebración confetti ----------------------------- */
+function celebrate(final=false){
+  const canvas = document.getElementById('confetti');
+  canvas.classList.remove('hidden');
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  const pieces = [];
+  const colors = ['#00b07a','#2fb6ff','#ffd166','#ff6b6b'];
+  for(let i=0;i<80;i++){
+    pieces.push({
+      x: Math.random()*canvas.width,
+      y: Math.random()*canvas.height - canvas.height,
+      vx: (Math.random()-0.5)*6,
+      vy: Math.random()*6 + 2,
+      size: Math.random()*6+4,
+      color: colors[Math.floor(Math.random()*colors.length)],
+      rot: Math.random()*360
+    });
+  }
+  let t=0;
+  function frame(){
+    t++;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    pieces.forEach(p=>{
+      p.x += p.vx; p.y += p.vy; p.vy += 0.08; p.rot += 6;
+      ctx.save();
+      ctx.translate(p.x,p.y);
+      ctx.rotate(p.rot * Math.PI/180);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+      ctx.restore();
+    });
+    if(t < 120) requestAnimationFrame(frame);
+    else { ctx.clearRect(0,0,canvas.width,canvas.height); canvas.classList.add('hidden'); }
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ----------------------------- Certificado PDF (jsPDF) ----------------------------- */
+async function generatePDF(){
+  const { jsPDF } = window.jspdf;
+  const name = document.getElementById('cert-name').value.trim();
+  if(!name){ alert('Escribe tu nombre para generar el certificado.'); return; }
+  const doc = new jsPDF({format:'a4', unit:'mm'});
+  doc.setFillColor(1,30,26);
+  doc.rect(0,0,210,297,'F');
+  doc.setFontSize(22); doc.setTextColor(240,255,250);
+  doc.text('Certificado de Investigador Ambiental', 105, 50, {align:'center'});
+  doc.setFontSize(14); doc.setTextColor(200,255,240);
+  doc.text('Laboratorio de Investigación Ambiental — Unidad: Energía y Soluciones', 105, 62, {align:'center'});
+  doc.setFontSize(18); doc.setTextColor(255,255,255);
+  doc.text(name, 105, 110, {align:'center'});
+  doc.setFontSize(12); doc.setTextColor(200,255,240);
+  const d = new Date().toLocaleDateString();
+  doc.text(`Por su participación y completar exitosamente la unidad didáctica.`, 105, 125, {align:'center'});
+  doc.text(`Fecha: ${d}`, 105, 135, {align:'center'});
+  doc.setDrawColor(0,190,120);
+  doc.circle(38, 220, 20, 'S');
+  doc.setFontSize(10);
+  doc.text('Sello', 38, 225, {align:'center'});
+  doc.setFontSize(11);
+  doc.text('Coordinador del Laboratorio', 160, 220, {align:'center'});
+  doc.save(`certificado_${name.replace(/\s+/g,'_')}.pdf`);
+}
+
+/* ----------------------------- Historial export ----------------------------- */
+function exportHistoryCSV(){
+  if(!state.history || state.history.length===0){ alert('No hay historial para exportar.'); return; }
+  const rows = [['#','Módulo','Resultado','Fecha']];
+  state.history.slice().reverse().forEach((r,i)=> rows.push([i+1, r.module, r.result, r.time]));
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'historial_lab.csv'; a.click();
+}
+function exportHistoryTXT(){
+  if(!state.history || state.history.length===0){ alert('No hay historial para exportar.'); return; }
+  const text = state.history.slice().reverse().map((r,i)=> `${i+1}. ${r.module} — ${r.result} — ${r.time}`).join('\n');
+  const blob = new Blob([text], {type:'text/plain;charset=utf-8;'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'historial_lab.txt'; a.click();
+}
+
+/* ----------------------------- Inicialización ----------------------------- */
+window.onload = ()=>{
+  renderHistory();
+  setupDragAndDrop();
+  setupMap();
+  updateProgress();
+  updateStatusBar();
+  window.addEventListener('resize', ()=>{ const c=document.getElementById('confetti'); c.width = window.innerWidth; c.height = window.innerHeight; });
+};
+</script>
+</body>
+</html>
+

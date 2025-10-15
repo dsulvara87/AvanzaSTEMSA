@@ -1,0 +1,749 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Aula STEM — Investigación de anomalías (completo)</title>
+
+<!-- Dependencias -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+<style>
+  :root{
+    --primary: #0b71ff;
+    --primary-700: #0056d6;
+    --accent: #ff7a59;
+    --bg: linear-gradient(180deg,#f5f9ff 0%, #eef5ff 60%);
+    --card: #ffffff;
+    --muted: #6b7280;
+    --success: #e9ffef;
+    --danger: #ffecec;
+    --radius: 12px;
+  }
+  *{box-sizing:border-box}
+  body{
+    font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+    margin:0; color:#0f1724; background:var(--bg); -webkit-font-smoothing:antialiased;
+  }
+  header{
+    position:sticky; top:0; z-index:40;
+    background: linear-gradient(90deg,var(--primary), var(--primary-700));
+    color:white; padding:14px 18px; box-shadow: 0 6px 18px rgba(11,113,255,0.12);
+    display:flex; align-items:center; gap:14px; justify-content:space-between;
+  }
+  header .brand{display:flex;gap:12px;align-items:center;}
+  header h1{font-size:1.05rem;margin:0;font-weight:700}
+  nav{display:flex;gap:8px;align-items:center}
+  nav button{background:transparent;border:1px solid rgba(255,255,255,0.14);color:white;padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:600}
+  .container{max-width:1100px;margin:18px auto;padding:16px}
+  .grid{display:grid;grid-template-columns:1fr 360px;gap:14px}
+  @media(max-width:980px){ .grid{grid-template-columns:1fr; padding:8px} nav{display:none} header{padding:12px} }
+  .card{background:var(--card);border-radius:var(--radius);padding:14px;box-shadow:0 6px 18px rgba(2,6,23,0.06)}
+  h2{color:var(--primary);margin:4px 0 12px}
+  label.small{font-weight:700;font-size:0.95rem}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  select,input[type="number"],textarea{width:100%;padding:8px;border-radius:10px;border:1px solid #e6eefc}
+  button.action{background:var(--primary);color:white;border:none;padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:700}
+  button.ghost{background:transparent;border:1px solid #eee;padding:8px 10px;border-radius:10px;cursor:pointer}
+  .muted{color:var(--muted);font-size:0.9rem}
+  canvas{background:linear-gradient(180deg,#fff,#fbfdff);border-radius:10px;padding:8px}
+  .mission{border-left:6px solid var(--primary);padding:10px;border-radius:8px;background:linear-gradient(180deg,#fff,#fcfdff);margin-bottom:12px}
+  .hint{background:#fff8e1;color:#6b4f00;border:1px solid #ffecb5;padding:10px;border-radius:8px;margin-top:10px}
+  .alert{padding:10px;border-radius:8px;margin-top:10px}
+  .bad{background:var(--danger);color:#990000;border:1px solid #ffbcbc}
+  .good{background:var(--success);color:#006600;border:1px solid #bff0c5}
+  .progress-bar{height:10px;background:#f1f5f9;border-radius:6px;overflow:hidden}
+  .progress-bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));width:0%}
+  .top-actions{display:flex;gap:8px;align-items:center}
+  footer{padding:12px;text-align:center;color:var(--muted);font-size:0.9rem;margin-top:18px}
+  .floating-top{position:fixed;right:18px;bottom:18px;background:var(--primary);color:white;padding:10px;border-radius:999px;box-shadow:0 8px 20px rgba(11,113,255,0.18);border:none;cursor:pointer}
+  .small{font-size:0.9rem;color:var(--muted)}
+  .table{width:100%;border-collapse:collapse;margin-top:8px}
+  .table th,.table td{padding:8px;border-bottom:1px solid #f3f6fb;text-align:left;font-size:0.95rem}
+  .kbd{background:#f3f6fb;border-radius:6px;padding:6px 8px;font-weight:700}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div style="font-size:1.6rem">🕵️‍♀️</div>
+    <div>
+      <h1>Aula STEM — Investigación de anomalías</h1>
+      <p style="margin-top:4px;font-size:0.85rem">Actividad guiada: pistas, misiones y descarga de informes</p>
+    </div>
+  </div>
+
+  <nav>
+    <button onclick="scrollToSection('intro')">Inicio</button>
+    <button onclick="scrollToSection('unidad')">Unidad</button>
+    <button onclick="scrollToSection('simulador')">Simulador</button>
+    <button onclick="scrollToSection('misiones')">Misiones</button>
+    <button onclick="scrollToSection('informe')">Informe</button>
+  </nav>
+</header>
+
+<main class="container">
+
+  <!-- NUEVO: Introducción -->
+  <section id="intro" class="card" style="margin-bottom:12px">
+    <h2>💡 ¿Qué es la Ciencia de Datos?</h2>
+    <p>La <strong>Ciencia de Datos</strong> combina <strong>estadística</strong>, <strong>programación</strong> y <strong>pensamiento crítico</strong> para analizar información, identificar patrones y apoyar decisiones basadas en evidencia. En este módulo adoptarás el rol de analista y trabajarás con datos simulados para detectar posibles anomalías.</p>
+    <h3>🎯 ¿Qué se hace en este módulo?</h3>
+    <ul>
+      <li>Explorar conjuntos de datos (CSV) y visualizar resultados.</li>
+      <li>Comparar <strong>Votos</strong> contra <strong>Censo</strong> por mesa.</li>
+      <li>Detectar participaciones extremas (<10% o >95%) y casos con votos &gt; censo.</li>
+      <li>Aplicar una versión simple de la <strong>Ley de Benford</strong>.</li>
+      <li>Usar simulaciones tipo <strong>Monte Carlo</strong> para evaluar la plausibilidad de un líder.</li>
+      <li>Redactar un informe con conclusiones basadas en la evidencia encontrada.</li>
+    </ul>
+  </section>
+
+  <!-- Reemplazamos/actualizamos la sección 'unidad' existente con la unidad didáctica de 80 minutos -->
+  <section id="unidad" class="card" style="margin-bottom:12px">
+    <h2>📘 Unidad Didáctica — Sesión de 80 minutos</h2>
+    <table class="table small">
+      <tr><td><strong>Duración:</strong></td><td>80 minutos</td></tr>
+      <tr><td><strong>Grado:</strong></td><td>Noveno</td></tr>
+      <tr><td><strong>Competencia:</strong></td><td>Analiza e interpreta datos mediante herramientas digitales para formular conclusiones basadas en evidencia.</td></tr>
+      <tr><td><strong>Aprendizajes esperados:</strong></td>
+        <td>
+          <ul>
+            <li>Comprende qué es la Ciencia de Datos y su aplicación.</li>
+            <li>Identifica irregularidades básicas en conjuntos de datos.</li>
+            <li>Interpreta resultados de histogramas, pruebas de Benford y simulaciones Monte Carlo.</li>
+            <li>Redacta un informe con conclusiones fundamentadas.</li>
+          </ul>
+        </td></tr>
+      <tr><td><strong>Metodología (80 minutos):</strong></td>
+        <td>
+          <ol>
+            <li><strong>Exploración inicial (10 min):</strong> lectura y comprensión del reto.</li>
+            <li><strong>Experimentación (30 min):</strong> uso del simulador para analizar datos y generar gráficos.</li>
+            <li><strong>Discusión guiada (20 min):</strong> interpretación colectiva de hallazgos.</li>
+            <li><strong>Informe final (20 min):</strong> redacción del reporte y descarga.</li>
+          </ol>
+        </td></tr>
+      <tr><td><strong>Evaluación:</strong></td>
+        <td>
+          <ul>
+            <li>Participación activa — 30%</li>
+            <li>Interpretación de resultados — 40%</li>
+            <li>Informe final coherente — 30%</li>
+          </ul>
+        </td></tr>
+    </table>
+  </section>
+
+  <div class="grid">
+    <!-- Izquierda: simulador y resultados -->
+    <div>
+      <section id="simulador" class="card">
+        <h2>🖥️ Simulador y controles</h2>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <div style="flex:1;min-width:220px">
+            <label class="small">Datos</label>
+            <select id="dataOption">
+              <option value="sample">Usar datos de ejemplo (caso base)</option>
+              <option value="alt">Usar datos alternativos (anomalías)</option>
+              <option value="upload">Subir archivo CSV</option>
+            </select>
+            <div id="uploadBox" style="display:none;margin-top:8px">
+              <input type="file" id="fileInput" accept=".csv" />
+              <div class="muted" style="margin-top:6px">CSV con columnas: Mesa, Censo, Votos, CandidatoA, CandidatoB, CandidatoC</div>
+            </div>
+          </div>
+
+          <div style="width:160px">
+            <label class="small">Monte Carlo (iters)</label>
+            <input id="mcIters" type="number" value="800" min="100" max="5000" />
+            <div class="muted" style="margin-top:6px;font-size:0.85rem">Más = más preciso</div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:8px;justify-content:flex-end">
+            <button class="action" id="runBtn">▶ Ejecutar análisis</button>
+            <div style="display:flex;gap:8px">
+              <button class="ghost" id="resetBtn">🔄 Reiniciar</button>
+              <button class="ghost" id="downloadAltCsv">⬇ CSV ejemplo</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px" class="small">
+          <strong>Atajos:</strong> <span class="kbd">Ejecutar → Run</span> · Usa los botones de misiones para avanzar.
+        </div>
+      </section>
+
+      <section class="card" style="margin-top:12px">
+        <h2>📈 Resultados rápidos</h2>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <div style="flex:1;min-width:210px">
+            <p class="small">Mesas: <strong id="summaryMesas">-</strong></p>
+            <p class="small">Total votos: <strong id="summaryVotos">-</strong></p>
+            <p class="small">Participación promedio: <strong id="summaryPart">-</strong></p>
+            <p class="small">Mesas con votos &gt; censo: <strong id="summaryOver">-</strong></p>
+            <p class="small">Outliers (|z|>3): <strong id="summaryZ">-</strong></p>
+          </div>
+
+          <div style="width:320px">
+            <p class="small">Benford (primer dígito) · Chi²: <strong id="benfordChi">-</strong></p>
+            <canvas id="benfordChart" height="120"></canvas>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap">
+          <div style="flex:1;min-width:260px" class="card">
+            <h3 style="margin:0 0 8px">Histograma: participación</h3>
+            <canvas id="histPart" height="140"></canvas>
+          </div>
+
+          <div style="flex:1;min-width:260px" class="card">
+            <h3 style="margin:0 0 8px">Monte Carlo (líder)</h3>
+            <canvas id="mcChart" height="140"></canvas>
+            <p class="small" id="mcResult"></p>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <h3 style="margin:0 0 8px">Mesas marcadas (señales simples)</h3>
+          <div id="flagsContainer" class="small">-</div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Derecha: misiones e informe -->
+    <aside>
+      <section id="misiones" class="card">
+        <h2>🎯 Misiones con pistas</h2>
+        <p class="small">Completa las misiones en orden. Usa las pistas cuando lo necesites.</p>
+
+        <!-- Misión 1 -->
+        <div class="mission" id="mis1">
+          <h4 style="margin:0">🔍 Misión 1 — ¿Hay mesas con más votos que personas?</h4>
+          <p class="small">Detecta filas donde <strong>Votos &gt; Censo</strong>.</p>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button id="mis1Btn" class="action" onclick="checkMission(1)">Revisar Misión 1</button>
+            <button class="ghost" onclick="showHint(1)">Pista</button>
+          </div>
+          <div id="result1"></div>
+          <div id="hints1" class="hint" style="display:none"></div>
+        </div>
+
+        <!-- Misión 2 -->
+        <div class="mission" id="mis2" style="display:none">
+          <h4 style="margin:0">📉 Misión 2 — Participaciones muy bajas/altas</h4>
+          <p class="small">Detecta participación &lt;10% o &gt;95%.</p>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button id="mis2Btn" class="action" onclick="checkMission(2)">Revisar Misión 2</button>
+            <button class="ghost" onclick="showHint(2)">Pista</button>
+          </div>
+          <div id="result2"></div>
+          <div id="hints2" class="hint" style="display:none"></div>
+        </div>
+
+        <!-- Misión 3 -->
+        <div class="mission" id="mis3" style="display:none">
+          <h4 style="margin:0">🔢 Misión 3 — Ley de Benford (versión sencilla)</h4>
+          <p class="small">Comprueba si el dígito '1' aparece mucho más que '9'.</p>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button id="mis3Btn" class="action" onclick="checkMission(3)">Revisar Misión 3</button>
+            <button class="ghost" onclick="showHint(3)">Pista</button>
+          </div>
+          <div id="result3"></div>
+          <div id="hints3" class="hint" style="display:none"></div>
+        </div>
+
+        <!-- Misión 4 -->
+        <div class="mission" id="mis4" style="display:none">
+          <h4 style="margin:0">🎲 Misión 4 — Monte Carlo (versión sencilla)</h4>
+          <p class="small">Simula repartos para ver si el líder es raro (p &lt; 0.05).</p>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button id="mis4Btn" class="action" onclick="checkMission(4)">Revisar Misión 4</button>
+            <button class="ghost" onclick="showHint(4)">Pista</button>
+          </div>
+          <div id="result4"></div>
+          <div id="hints4" class="hint" style="display:none"></div>
+        </div>
+      </section>
+
+      <section id="informe" class="card" style="margin-top:12px">
+        <h2>✍ Informe final</h2>
+        <p class="small">Escribe 2–4 líneas. Usa el modelo si necesitas ayuda.</p>
+        <textarea id="finalReport" rows="5" placeholder="Escribe aquí tu informe..." style="width:100%;"></textarea>
+        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+          <button class="action" onclick="submitReport()">Enviar informe</button>
+          <button class="ghost" id="downloadTxtBtn">⬇ Descargar TXT</button>
+          <button class="ghost" id="downloadCsvBtn">⬇ Descargar CSV</button>
+          <button class="ghost" id="insertModelBtn">✏️ Insertar ejemplo</button>
+          <button class="ghost" id="clearReport">🧹 Limpiar</button>
+        </div>
+        <div id="result5" style="margin-top:10px"></div>
+      </section>
+    </aside>
+  </div>
+
+  <div style="margin-top:10px" class="card">
+    <h3 style="margin:0 0 8px">Detalles técnicos</h3>
+    <p class="small">Este recurso usa <strong>Chart.js</strong> para gráficos y <strong>PapaParse</strong> para leer CSV. El Monte Carlo está optimizado para iteraciones moderadas en el navegador.</p>
+  </div>
+
+  <footer>Diseñado para aula — actividad práctica de Ciencia de Datos y pensamiento crítico.</footer>
+</main>
+
+<button class="floating-top" title="Ir arriba" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+/* ---------- Datos de ejemplo ---------- */
+const sampleCSV = `Mesa,Censo,Votos,CandidatoA,CandidatoB,CandidatoC
+1,179,157,56,89,12
+2,117,63,10,30,23
+3,146,130,74,26,30
+4,123,59,13,36,10
+5,137,123,46,50,27
+6,185,205,112,64,29
+7,158,111,28,35,48
+8,129,90,37,37,16
+9,195,125,13,85,27
+10,137,68,11,21,36
+11,133,13,4,6,3
+12,183,111,11,56,44
+13,112,52,5,23,24
+14,160,125,63,16,46
+15,169,138,69,50,19
+16,194,143,74,40,29
+17,153,72,2,31,39
+18,142,119,45,59,15
+19,154,141,64,23,54
+20,126,126,42,48,36
+21,129,129,37,57,35
+22,198,123,16,60,47
+23,113,101,47,32,22
+24,129,65,23,15,27
+25,140,127,64,23,40
+26,120,64,25,15,24
+27,186,113,26,33,54
+28,167,109,50,42,17
+29,181,91,8,43,40
+30,156,105,22,55,28
+31,147,103,103,0,0
+32,98,52,12,21,19
+33,83,62,31,20,11
+34,151,69,11,29,29
+35,106,64,8,25,31
+36,84,38,5,11,22
+37,166,134,64,28,42
+38,140,91,28,30,33
+39,115,102,55,27,20
+40,163,71,18,28,25
+41,195,142,36,52,54
+42,84,39,14,12,13
+43,184,141,53,42,46
+44,161,87,9,32,46
+45,141,111,55,20,36
+46,187,160,61,57,42
+47,170,116,39,26,51
+48,122,81,24,33,24
+49,194,126,15,67,44
+50,100,80,38,19,23`;
+
+const altCSV = `Mesa,Censo,Votos,CandidatoA,CandidatoB,CandidatoC
+1,150,149,80,45,24
+2,130,129,64,35,30
+3,160,160,160,0,0
+4,140,120,60,40,20
+5,120,90,10,40,40
+6,155,155,120,30,5
+7,170,5,1,2,2
+8,180,181,100,60,21
+9,200,60,10,30,20
+10,130,129,64,33,32
+11,140,138,68,40,30
+12,160,159,90,40,29
+13,150,149,145,2,2
+14,135,10,2,5,3
+15,145,144,72,50,22`;
+
+/* ---------- Utilidades estadísticas ---------- */
+function mean(arr){ return arr.reduce((a,b)=>a+b,0)/Math.max(arr.length,1); }
+function sd(arr){ const m = mean(arr); return Math.sqrt(arr.reduce((s,x)=>s+Math.pow(x-m,2),0)/Math.max(arr.length,1)); }
+function firstDigit(n){ n = Math.abs(Math.floor(n)); if(!n) return 0; while(n>=10) n = Math.floor(n/10); return n; }
+const benfordExp=[0.3010,0.1761,0.1249,0.09691,0.07918,0.06695,0.05799,0.05115,0.04576];
+
+/* ---------- Charts ---------- */
+let histChart=null, benfordChart=null, mcChart=null;
+function destroyIf(chart){ if(chart){ try{ chart.destroy(); }catch(e){} } }
+function drawHist(labels,data){
+  destroyIf(histChart);
+  const canvas = document.getElementById('histPart');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  histChart = new Chart(ctx, { type:'bar',
+    data:{ labels, datasets:[{ label:'Mesas', data, backgroundColor: labels.map(()=> 'rgba(11,113,255,0.6)') }]},
+    options:{ plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true } } }
+  });
+}
+function drawBenford(obs){
+  destroyIf(benfordChart);
+  const canvas = document.getElementById('benfordChart');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  benfordChart = new Chart(ctx, { type:'bar',
+    data:{ labels:['1','2','3','4','5','6','7','8','9'],
+      datasets:[
+        { label:'Observado', data:obs, backgroundColor:'rgba(11,113,255,0.6)' },
+        { label:'Benford', data:benfordExp, type:'line', borderColor:'rgba(255,122,89,0.9)', tension:0.2, fill:false }
+      ]
+    },
+    options:{ scales:{ y:{ beginAtZero:true } }, plugins:{legend:{position:'bottom'}} }
+  });
+}
+function drawMC(hist, labels, obs, p){
+  destroyIf(mcChart);
+  const canvas = document.getElementById('mcChart');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  mcChart = new Chart(ctx, { type:'bar',
+    data:{ labels, datasets:[{ label:'Frecuencia', data:hist, backgroundColor: labels.map(()=> 'rgba(0,170,136,0.6)') }]},
+    options:{ plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true } } }
+  });
+  const r = document.getElementById('mcResult');
+  if(r) r.innerText = `Valor observado líder: ${obs}. p ≈ ${p.toFixed(3)} (p<0.05 → raro).`;
+}
+
+/* ---------- Estado ---------- */
+let lastAnalysis = null;
+let hintsUsed = {1:0,2:0,3:0,4:0};
+const hints = {
+  1: [
+    "Ordena o revisa la columna 'Votos' y 'Censo' por fila; compara número a número.",
+    "Filtra filas donde Votos > Censo — esos son errores fáciles de ver.",
+    "Revisa si hay comas o sumas mal colocadas (ej. sumaron votos de varias mesas)."
+  ],
+  2: [
+    "La participación = Votos / Censo. Busca valores <0.1 o >0.95.",
+    "Mesas con participación <10% pueden indicar problemas o mesas incompletas.",
+    "Mira también el tamaño del censo: un censo muy pequeño puede distorsionar la tasa."
+  ],
+  3: [
+    "Benford: el primer dígito '1' suele aparecer con ~30% de frecuencia.",
+    "Si la distribución es muy plana o '1' no domina, investiga más.",
+    "Chi² alto (ej. >15.5) sugiere diferencia respecto a Benford."
+  ],
+  4: [
+    "Monte Carlo simula repartos según probabilidades observadas.",
+    "Un p pequeño (<0.05) indica que lo observado es raro bajo el modelo aleatorio.",
+    "Aumenta iteraciones (ej. 2000) para confirmar estabilidad del p."
+  ]
+};
+
+/* ---------- Progreso de misiones ---------- */
+let completed = new Set();
+function markCompleted(n){ completed.add(n); updateProgress(); }
+function updateProgress(){
+  const total = 5;
+  const comp = completed.size;
+  const pct = Math.round((comp / total) * 100);
+  const bar = document.getElementById('progBar');
+  if(bar) bar.style.width = pct + '%';
+  const t = document.getElementById('progText');
+  if(t) t.innerText = `${comp} / ${total} completadas`;
+}
+
+/* ---------- Análisis de datos (modular) ---------- */
+function parseRows(rawRows){
+  return rawRows
+    .filter(r => r && r.Mesa !== undefined && r.Votos !== undefined && r.Censo !== undefined)
+    .map(r => {
+      return {
+        Mesa: r.Mesa,
+        Censo: Number(r.Censo) || 0,
+        Votos: Number(r.Votos) || 0,
+        CandidatoA: Number(r.CandidatoA) || 0,
+        CandidatoB: Number(r.CandidatoB) || 0,
+        CandidatoC: Number(r.CandidatoC) || 0,
+      };
+    });
+}
+
+function runAnalysis(parsedRows){
+  const rows = parseRows(parsedRows);
+  if(rows.length === 0){ alert('No hay datos válidos. Verifica el CSV.'); return; }
+
+  rows.forEach(r => r.part = (r.Censo>0) ? r.Votos / r.Censo : 0);
+
+  const mesas = rows.length;
+  const totalVotos = rows.reduce((s,r)=>s + r.Votos,0);
+  const partRates = rows.map(r=>r.part);
+  const avgPart = (mean(partRates)*100).toFixed(1) + '%';
+  const overC = rows.filter(r=>r.Votos > r.Censo).length;
+
+  const zVals = partRates.map(x => (x - mean(partRates)) / (sd(partRates) || 1));
+  const zOut = zVals.filter(z => Math.abs(z) > 3).length;
+
+  // Benford
+  const digs = rows.map(r => firstDigit(r.Votos)).filter(d => d>0);
+  const counts = [1,2,3,4,5,6,7,8,9].map(d => digs.filter(x => x===d).length / Math.max(digs.length,1));
+  let chi = 0;
+  for(let i=0;i<9;i++){ chi += Math.pow(counts[i] - benfordExp[i], 2) / Math.max(benfordExp[i], 1e-6); }
+
+  // Histograma de participación
+  const bins = Array(10).fill(0);
+  partRates.forEach(p => { let idx = Math.floor(p*10); if(idx<0) idx=0; if(idx>9) idx=9; bins[idx]++; });
+  const labels = ["0-10%","10-20%","20-30%","30-40%","40-50%","50-60%","60-70%","70-80%","80-90%","90-100%"];
+  drawHist(labels, bins);
+
+  // Monte Carlo aproximado
+  const totals = {A:0,B:0,C:0};
+  rows.forEach(r => { totals.A += r.CandidatoA; totals.B += r.CandidatoB; totals.C += r.CandidatoC; });
+  const obs = Math.max(totals.A, totals.B, totals.C);
+  const allV = Math.max(totals.A + totals.B + totals.C, 1);
+  const probs = [totals.A/allV, totals.B/allV, totals.C/allV];
+  const iters = Math.max(100, Math.min(5000, Number(document.getElementById('mcIters').value) || 500));
+  let extreme = 0;
+  const histCounts = [0,0,0];
+
+  for(let i=0;i<iters;i++){
+    let sim = [
+      Math.round(probs[0]*allV + (Math.random()-0.5)*Math.sqrt(allV)),
+      Math.round(probs[1]*allV + (Math.random()-0.5)*Math.sqrt(allV)),
+      0
+    ];
+    sim[2] = Math.max(0, allV - (sim[0] + sim[1]));
+    sim = sim.map(x => Math.max(0, x));
+    const top = Math.max(...sim);
+    histCounts[sim.indexOf(top)]++;
+    if(top >= obs) extreme++;
+  }
+  const p = extreme / iters;
+  drawMC(histCounts, ['A','B','C'], obs, p);
+
+  // Flags simples
+  const flags = [];
+  rows.forEach(r=>{
+    if(r.Votos > r.Censo) flags.push({mesa:r.Mesa, motivo:'Votos > Censo', votos:r.Votos, censo:r.Censo});
+    if(r.part < 0.10) flags.push({mesa:r.Mesa, motivo:'Participación < 10%', votos:r.Votos, censo:r.Censo});
+    if(r.part > 0.95) flags.push({mesa:r.Mesa, motivo:'Participación > 95%', votos:r.Votos, censo:r.Censo});
+  });
+
+  // Mostrar resumen
+  const elSet = id => document.getElementById(id);
+  if(elSet('summaryMesas')) elSet('summaryMesas').innerText = mesas;
+  if(elSet('summaryVotos')) elSet('summaryVotos').innerText = totalVotos;
+  if(elSet('summaryPart')) elSet('summaryPart').innerText = avgPart;
+  if(elSet('summaryOver')) elSet('summaryOver').innerText = overC;
+  if(elSet('summaryZ')) elSet('summaryZ').innerText = zOut;
+  if(elSet('benfordChi')) elSet('benfordChi').innerText = chi.toFixed(2);
+
+  const flagsDiv = document.getElementById('flagsContainer');
+  if(flags.length === 0 && flagsDiv) flagsDiv.innerHTML = '<div class="good alert">No se detectaron mesas con problemas simples.</div>';
+  else if(flagsDiv) flagsDiv.innerHTML = flags.map(f => `<div class="bad alert">Mesa ${f.mesa}: ${f.motivo} (votos=${f.votos}, censo=${f.censo})</div>`).join('');
+
+  drawBenford(counts);
+
+  lastAnalysis = {mesas, totalVotos, avgPart, overC, zOut, chi, p, flags, rows, totals};
+
+  // habilitar Misión 1 y resetear pistas usadas
+  const m1btn = document.getElementById('mis1Btn');
+  if(m1btn) m1btn.disabled = false;
+  hintsUsed = {1:0,2:0,3:0,4:0};
+  ['hints1','hints2','hints3','hints4'].forEach(id=>{ const el = document.getElementById(id); if(el){ el.style.display='none'; el.innerHTML=''; } });
+
+  // reset misiones siguientes
+  ['mis2','mis3','mis4'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.style.display = 'none';
+  });
+  ['result1','result2','result3','result4','result5'].forEach(id=>{ const el=document.getElementById(id); if(el) el.innerHTML=''; });
+
+  updateProgress();
+}
+
+/* ---------- Misiones ---------- */
+function checkMission(n){
+  if(!lastAnalysis){ alert('Primero ejecuta el análisis.'); return; }
+  if(n===1){
+    const over = lastAnalysis.overC;
+    const html = over>0 ? `<div class="bad alert">Encontradas ${over} mesa(s) con votos > censo. Revisa "Mesas marcadas".</div>`
+                       : `<div class="good alert">No hay mesas con votos > censo. Buen comienzo.</div>`;
+    const el = document.getElementById('result1'); if(el) el.innerHTML = html;
+    const mis2 = document.getElementById('mis2'); if(mis2) mis2.style.display = 'block';
+    markCompleted(1);
+  }
+  if(n===2){
+    const lowHigh = lastAnalysis.flags.filter(f=>f.motivo.includes('Participación'));
+    const low = lowHigh.filter(f=>f.motivo.includes('< 10%')).length;
+    const high = lowHigh.filter(f=>f.motivo.includes('> 95%')).length;
+    const html = `<div class="${(low+high)>0 ? 'bad' : 'good'} alert">Mesas participación <10%: ${low}. Mesas participación >95%: ${high}.</div>`;
+    const el = document.getElementById('result2'); if(el) el.innerHTML = html;
+    const mis3 = document.getElementById('mis3'); if(mis3) mis3.style.display = 'block';
+    markCompleted(2);
+  }
+  if(n===3){
+    const chi = lastAnalysis.chi;
+    const msg = chi > 15.5 ? `<div class="bad alert">Chi² = ${chi.toFixed(2)} → patrón Benford poco claro (investiga).</div>`
+                         : `<div class="good alert">Chi² = ${chi.toFixed(2)} → distribución no contradice Benford de forma simple.</div>`;
+    const el = document.getElementById('result3'); if(el) el.innerHTML = msg;
+    const mis4 = document.getElementById('mis4'); if(mis4) mis4.style.display = 'block';
+    markCompleted(3);
+  }
+  if(n===4){
+    const p = lastAnalysis.p;
+    const msg = p < 0.05 ? `<div class="bad alert">p ≈ ${p.toFixed(3)} → resultado del líder poco probable.</div>`
+                        : `<div class="good alert">p ≈ ${p.toFixed(3)} → resultado plausible según simulaciones.</div>`;
+    const el = document.getElementById('result4'); if(el) el.innerHTML = msg;
+    // Llevar al informe (está visible pero hacemos scroll)
+    const inf = document.getElementById('informe'); if(inf) inf.scrollIntoView({behavior:'smooth'});
+    markCompleted(4);
+  }
+}
+
+/* ---------- Pistas ---------- */
+function showHint(mission){
+  hintsUsed[mission] = Math.min(3, (hintsUsed[mission]||0) + 1);
+  const idx = hintsUsed[mission]-1;
+  const container = document.getElementById('hints'+mission);
+  if(!container) return;
+  container.style.display = 'block';
+  container.innerHTML = `<strong>Pista ${hintsUsed[mission]}:</strong> ${hints[mission][idx]}`;
+}
+
+/* ---------- Informe y descargas ---------- */
+const modelReport = `Título: Informe breve de la auditoría de mesas
+Resumen: Análisis rápido con controles básicos (votos vs censo, participación, Benford y Monte Carlo).
+Hallazgos principales:
+- Mesas con votos > censo: (indicar cuántas).
+- Mesas con participación anómala: (ej. <10% o >95%).
+- Benford: (chi² y observación).
+- Monte Carlo: (valor p y su interpretación).
+Conclusión: (Escribe si crees que hay señales que merecen investigar más).`;
+
+document.getElementById('insertModelBtn').addEventListener('click', ()=>{
+  document.getElementById('finalReport').value = modelReport;
+  document.getElementById('finalReport').scrollIntoView({behavior:'smooth'});
+});
+document.getElementById('clearReport').addEventListener('click', ()=>{ document.getElementById('finalReport').value = ''; });
+
+function downloadText(filename, text){
+  const blob = new Blob([text], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
+
+document.getElementById('downloadTxtBtn').addEventListener('click', ()=>{
+  const content = document.getElementById('finalReport').value || '';
+  if(content.trim().length===0){ alert('Escribe tu informe antes de descargar.'); return; }
+  downloadText('informe_estudiante.txt', content);
+});
+document.getElementById('downloadCsvBtn').addEventListener('click', ()=>{
+  const content = document.getElementById('finalReport').value || '';
+  if(content.trim().length===0){ alert('Escribe tu informe antes de descargar.'); return; }
+  const csv = 'informe\n"' + content.replace(/"/g,'""') + '"\n';
+  downloadText('informe_estudiante.csv', csv);
+});
+document.getElementById('downloadAltCsv').addEventListener('click', ()=> downloadText('caso_anomalia_alternativo.csv', altCSV));
+
+/* ---------- Handlers UI ---------- */
+document.getElementById('dataOption').addEventListener('change', (e)=>{
+  const show = e.target.value === 'upload';
+  const box = document.getElementById('uploadBox');
+  if(box) box.style.display = show ? 'block' : 'none';
+});
+document.getElementById('resetBtn').addEventListener('click', resetAll);
+
+document.getElementById('runBtn').addEventListener('click', ()=>{
+  const opt = document.getElementById('dataOption').value;
+  if(opt === 'sample'){
+    Papa.parse(sampleCSV, { header:true, skipEmptyLines:true, complete: function(res){ runAnalysis(res.data); }});
+  } else if(opt === 'alt'){
+    Papa.parse(altCSV, { header:true, skipEmptyLines:true, complete: function(res){ runAnalysis(res.data); }});
+  } else {
+    const file = document.getElementById('fileInput').files[0];
+    if(!file){ alert('Sube un CSV o elige un caso de ejemplo.'); return; }
+    Papa.parse(file, { header:true, skipEmptyLines:true, complete: function(res){ runAnalysis(res.data); }});
+  }
+});
+
+/* ---------- Report submit ---------- */
+function submitReport(){
+  const text = document.getElementById('finalReport').value.trim();
+  if(text.length < 30){
+    const out = document.getElementById('result5');
+    if(out) out.innerHTML = '<div class="bad alert">Escribe al menos 30 caracteres para tu informe.</div>';
+    return;
+  }
+  let summary = `<div class="good alert"><strong>Informe recibido.</strong> Resumen automático:<br>`;
+  if(lastAnalysis && lastAnalysis.flags && lastAnalysis.flags.length>0){
+    summary += `Se encontraron ${lastAnalysis.flags.length} señales simples (ej. votos > censo o participaciones extrañas).<br>`;
+  } else {
+    summary += `No se detectaron señales simples en los datos.<br>`;
+  }
+  summary += `</div>`;
+  const out = document.getElementById('result5');
+  if(out) out.innerHTML = summary;
+  markCompleted(5);
+}
+
+/* ---------- Reset ---------- */
+function resetAll(){
+  lastAnalysis = null; hintsUsed = {1:0,2:0,3:0,4:0}; completed = new Set();
+  ['result1','result2','result3','result4','result5'].forEach(id=>{ const el=document.getElementById(id); if(el) el.innerHTML=''; });
+  ['hints1','hints2','hints3','hints4'].forEach(id=>{ const el=document.getElementById(id); if(el){ el.style.display='none'; el.innerHTML=''; } });
+  ['mis2','mis3','mis4'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display = 'none'; });
+  document.getElementById('finalReport').value = '';
+  ['summaryMesas','summaryVotos','summaryPart','summaryOver','summaryZ','benfordChi'].forEach(id=>{ const el=document.getElementById(id); if(el) el.innerText='-'; });
+  const fc = document.getElementById('flagsContainer'); if(fc) fc.innerText='-';
+  destroyIf(histChart); destroyIf(benfordChart); destroyIf(mcChart);
+  // desactivar botón de misión 1 hasta nuevo análisis
+  const m1btn = document.getElementById('mis1Btn'); if(m1btn) m1btn.disabled = true;
+  updateProgress();
+}
+
+/* ---------- Drag & Drop CSV helper ---------- */
+(function(){
+  const body = document.body;
+  ['dragenter','dragover'].forEach(ev => body.addEventListener(ev, e => { e.preventDefault(); body.style.opacity = 0.98; }));
+  ['dragleave','drop'].forEach(ev => body.addEventListener(ev, e => { e.preventDefault(); body.style.opacity = 1; }));
+  body.addEventListener('drop', e => {
+    if(!e.dataTransfer) return;
+    const f = e.dataTransfer.files[0];
+    if(!f) return;
+    if(f.name.toLowerCase().endsWith('.csv')){
+      document.getElementById('dataOption').value = 'upload';
+      const up = document.getElementById('uploadBox'); if(up) up.style.display = 'block';
+      const fileInput = document.getElementById('fileInput');
+      if(fileInput){
+        try{
+          if(typeof DataTransfer !== 'undefined'){
+            const dt = new DataTransfer();
+            dt.items.add(f);
+            fileInput.files = dt.files;
+          } else {
+            // algunos navegadores no permiten asignar programáticamente fileInput.files
+            alert('Tu navegador no permite asignar automáticamente el archivo. Selecciónalo manualmente en el campo de carga.');
+          }
+          alert('CSV cargado por arrastre. Haz click en "Ejecutar análisis".');
+        }catch(err){
+          // fallback
+          alert('No se pudo establecer el archivo automáticamente. Selecciónalo manualmente en el campo de carga.');
+        }
+      }
+    }
+  });
+})();
+
+/* ---------- Navegación interna ---------- */
+function scrollToSection(id){
+  const el = document.getElementById(id);
+  if(el) el.scrollIntoView({behavior:'smooth'});
+}
+
+/* ---------- Inicial ---------- */
+const initialM1Btn = document.getElementById('mis1Btn');
+if(initialM1Btn) initialM1Btn.disabled = true;
+updateProgress();
+
+</script>
+</body>
+</html>

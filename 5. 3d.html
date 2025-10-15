@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>🔧 Laboratorio STEM: Diseño e Impresión 3D</title>
+<style>
+  body {font-family: Inter, Arial, sans-serif; margin: 0; background: #0a0f1c; color: #e6f0f8;}
+  header {padding: 20px; text-align: center; background: linear-gradient(90deg,#2fb4ff33,#ff7a1833);}
+  header h1 {margin: 0; color: #2fb4ff;}
+  .container {max-width: 1200px; margin: 20px auto; padding: 20px;}
+  .card {background: #101b2d; border-radius: 14px; padding: 20px; margin-bottom: 20px; box-shadow: 0 6px 18px rgba(0,0,0,0.6);}
+  h2 {color: #ff7a18;}
+  .grid {display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 16px; margin-top: 16px;}
+  .cell {background:#16263c; padding:16px; border-radius:10px; text-align:center; cursor:pointer; transition:transform 0.2s,background 0.2s;}
+  .cell:hover{transform:translateY(-6px); background:#1e3353;}
+  .cell.active{border:2px solid #2fb4ff; background:#1a2944;}
+  .status{text-align:center; margin-top:14px; font-weight:600; color:#9fb4c8;}
+  .btn{background:linear-gradient(90deg,#2fb4ff,#ff7a18); border:none; padding:12px 20px; border-radius:10px; cursor:pointer; color:#041222; font-weight:700; margin-top:16px;}
+  .input-row{display:flex;gap:12px;align-items:center;margin-top:10px}
+  .sim-controls{display:flex; gap:20px; flex-wrap:wrap; margin-top:16px;}
+  .sim-controls label{display:block; font-size:0.9rem; margin-bottom:4px; color:#9fb4c8;}
+  .sim-controls input{width:150px;}
+  .sim-area{text-align:center; margin-top:20px;}
+  .sim-printer{width:120px; height:120px; margin:auto; border:6px solid #2fb4ff; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:2rem; color:#2fb4ff; transition:transform 0.3s, border-color 0.3s;}
+  canvas {background:#16263c; border-radius:10px; display:block; margin:20px auto;}
+  .designer{display:flex;gap:16px;align-items:flex-start}
+  .designer .controls{width:360px}
+  .designer canvas{width:480px;height:360px;border-radius:8px}
+  .download-links{display:flex;gap:12px;margin-top:12px}
+  a.link{color:#2fb4ff;text-decoration:underline}
+</style>
+</head>
+<body>
+<header>
+  <h1>Laboratorio STEM: Diseño e Impresión 3D</h1>
+  <p>Explora — Experimenta — Analiza — Diseña — Imprime</p>
+</header>
+<div class="container">
+  <!-- Módulo 1 -->
+  <section class="card" id="m1">
+    <h2>Módulo 1 — Observación</h2>
+    <p>Identifica fallos comunes en impresión 3D y reflexiona sobre sus causas.</p>
+    <div class="grid" id="fault-map"></div>
+    <div class="status" id="m1-count">Selecciona al menos 3 fallos</div>
+  </section>
+
+  <!-- Módulo 2 -->
+  <section class="card" id="m2" style="display:none;">
+    <h2>Módulo 2 — Experimentación</h2>
+    <p>Ajusta los parámetros de impresión y registra tus pruebas. Cada intento se guarda para análisis.</p>
+    <div class="sim-controls">
+      <div>
+        <label>Material</label>
+        <select id="material">
+          <option value="PLA">PLA (190–220 °C)</option>
+          <option value="ABS">ABS (220–250 °C)</option>
+          <option value="PETG">PETG (220–240 °C)</option>
+        </select>
+      </div>
+      <div>
+        <label for="temp">Temperatura (°C)</label>
+        <input type="range" id="temp" min="180" max="260" value="200">
+        <div class="input-row"><span id="temp-val">200</span></div>
+      </div>
+      <div>
+        <label for="speed">Velocidad (mm/s)</label>
+        <input type="range" id="speed" min="20" max="120" value="60">
+        <div class="input-row"><span id="speed-val">60</span></div>
+      </div>
+      <div>
+        <label for="retract">Retracción (mm)</label>
+        <input type="range" id="retract" min="0" max="6" step="0.1" value="1.5">
+        <div class="input-row"><span id="retract-val">1.5</span></div>
+      </div>
+    </div>
+    <div class="sim-area">
+      <div class="sim-printer" id="sim-printer">🖨️</div>
+      <div class="status" id="sim-status"></div>
+      <button class="btn" id="run-sim">Ejecutar simulación</button>
+    </div>
+    <h3>Registro de pruebas (historial)</h3>
+    <table border="1" width="100%" id="log-table"><tr><th>#</th><th>Material</th><th>Temp (°C)</th><th>Vel (mm/s)</th><th>Retrac (mm)</th><th>Observación</th></tr></table>
+  </section>
+
+  <!-- Módulo 3 -->
+  <section class="card" id="m3" style="display:none;">
+    <h2>Módulo 3 — Análisis STEM</h2>
+    <p>Calcula tiempo estimado, grafica tendencias y relaciona resultados con la física del proceso.</p>
+    <label>Altura de capa (mm)</label>
+    <input type="number" id="layer-height" value="0.2" step="0.05">
+    <label>Altura total del objeto (mm)</label>
+    <input type="number" id="object-height" value="50">
+    <button class="btn" id="calc-time">Calcular tiempo estimado</button>
+    <div class="status" id="time-result"></div>
+    <canvas id="chart" width="600" height="240"></canvas>
+  </section>
+
+  <!-- Módulo 4: Diseño y exportación -->
+  <section class="card" id="m4" style="display:none;">
+    <h2>Módulo 4 — Proyecto final (Diseña y exporta)</h2>
+    <p>Propón un problema real y diseña una solución con impresión 3D. Usa el diseñador interactivo para crear la pieza y luego exporta <strong>STL</strong> y <strong>G-code</strong>.</p>
+
+    <h3>1) Planteamiento del problema</h3>
+    <label>Describe el problema que quieres resolver</label>
+    <textarea id="problem" rows="3" style="width:100%" placeholder="Ej: Soporte para celular que no bloquee ventilación de un equipo..."></textarea>
+    <label>¿Qué requisito debe cumplir la pieza?</label>
+    <input id="requirement" placeholder="Ej: soportar 1 kg, ajustar en 3 mm de tolerancia" style="width:100%" />
+
+    <h3>2) Diseñador interactivo (prototipo paramétrico)</h3>
+    <div class="designer">
+      <div class="controls">
+        <label>Tipo de pieza</label>
+        <select id="shape">
+          <option value="box">Caja / Soporte</option>
+          <option value="cyl">Cilindro</option>
+          <option value="bracket">Soporte en L (gancho)</option>
+        </select>
+        <label>Ancho / Diámetro (mm)</label>
+        <input type="number" id="dim1" value="40">
+        <label>Profundidad (mm)</label>
+        <input type="number" id="dim2" value="20">
+        <label>Altura (mm)</label>
+        <input type="number" id="dim3" value="30">
+        <label>Relleno (%)</label>
+        <input type="number" id="infill" value="20">
+        <div style="margin-top:10px"><button class="btn" id="render-btn">Renderizar</button> <button class="btn" id="export-stl">Exportar STL</button> <button class="btn" id="export-gcode">Exportar G-code</button></div>
+        <div class="download-links"><a id="stl-link" style="display:none;" download="piece.stl">Descargar STL</a><a id="gcode-link" style="display:none;" download="piece.gcode">Descargar G-code</a></div>
+      </div>
+      <canvas id="designer-canvas" width="480" height="360"></canvas>
+    </div>
+
+    <h3>3) Integración y recursos</h3>
+    <p>Puedes exportar tu diseño y abrirlo en una herramienta de slicing (Cura, PrusaSlicer) para obtener G-code más avanzado. También puedes editar tu diseño en Tinkercad:</p>
+    <a class="link" href="https://www.tinkercad.com" target="_blank" rel="noopener">Abrir Tinkercad</a>
+
+    <h3>4) Entrega</h3>
+    <label>Resumen de la solución (mín 150 caracteres)</label>
+    <textarea id="solution-summary" rows="4" style="width:100%"></textarea>
+    <div style="margin-top:10px"><button class="btn" id="submit-project">Enviar proyecto</button></div>
+    <div class="status" id="project-feedback"></div>
+  </section>
+
+  <footer>Creado para uso educativo — Laboratorio 3D interactivo STEM</footer>
+</div>
+
+<!-- Librería Chart.js desde CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Estado y M1
+const state = {m1Selected:[], logs:[], attempts:[]};
+const faults = [
+  {name:'Warping',emoji:'🧱',desc:'Esquinas elevadas'},
+  {name:'Stringing',emoji:'🧶',desc:'Hilos entre zonas'},
+  {name:'Capas desalineadas',emoji:'🔩',desc:'Desplazamientos'},
+  {name:'Falta de adherencia',emoji:'🔗',desc:'Primera capa no pega'},
+  {name:'Subextrusión',emoji:'➖',desc:'Falta de material'},
+  {name:'Sobreextrusión',emoji:'➕',desc:'Exceso de material'}
+];
+function setupFaultMap(){
+  const map = document.getElementById('fault-map');
+  faults.forEach(f=>{
+    const cell=document.createElement('div');cell.className='cell';
+    cell.innerHTML=`<div style='font-size:1.6rem'>${f.emoji}</div><div>${f.name}</div><div style='font-size:0.8rem;color:#9fb4c8'>${f.desc}</div>`;
+    cell.addEventListener('click',()=>toggleFaultCell(cell,f.name));
+    map.appendChild(cell);
+  });
+}
+function toggleFaultCell(cell,name){
+  const idx = state.m1Selected.indexOf(name);
+  if(idx>=0){state.m1Selected.splice(idx,1);cell.classList.remove('active');}
+  else{state.m1Selected.push(name);cell.classList.add('active');}
+  document.getElementById('m1-count').innerText=`Seleccionados: ${state.m1Selected.length}`;
+  if(state.m1Selected.length>=3){document.getElementById('m2').style.display='block';}
+}
+setupFaultMap();
+
+// Simulación (M2)
+const tempInput=document.getElementById('temp');
+const speedInput=document.getElementById('speed');
+const retractInput=document.getElementById('retract');
+const materialSelect=document.getElementById('material');
+const tempVal=document.getElementById('temp-val');
+const speedVal=document.getElementById('speed-val');
+const retractVal=document.getElementById('retract-val');
+const statusEl=document.getElementById('sim-status');
+const printer=document.getElementById('sim-printer');
+const logTable=document.getElementById('log-table');
+
+function evaluateParams(mat,t,s,r){
+  let obs='Parámetros adecuados.';
+  if(mat==='PLA'&&(t<190||t>220)) obs='PLA fuera de rango: mala adhesión o sobreextrusión.';
+  if(mat==='ABS'&&(t<220||t>250)) obs='ABS fuera de rango: warping o mala capa.';
+  if(mat==='PETG'&&(t<220||t>240)) obs='PETG fuera de rango: stringing o mala capa.';
+  if(s>100) obs+=' Velocidad alta: riesgo de capas desalineadas.';
+  if(r<0.5) obs+=' Retracción baja: posible stringing.';
+  return obs;
+}
+
+function runSimulation(){
+  const mat=materialSelect.value; const t=parseInt(tempInput.value); const s=parseInt(speedInput.value); const r=parseFloat(retractInput.value);
+  tempVal.textContent=t; speedVal.textContent=s; retractVal.textContent=r;
+  const obs = evaluateParams(mat,t,s,r);
+  statusEl.textContent = obs;
+  printer.style.transform = `scale(${1+(s-60)/200}) rotate(${(t-200)/6}deg)`;
+  const row = logTable.insertRow(-1);
+  const idx = logTable.rows.length-1;
+  row.insertCell(0).innerText=idx;
+  row.insertCell(1).innerText=mat;
+  row.insertCell(2).innerText=t;
+  row.insertCell(3).innerText=s;
+  row.insertCell(4).innerText=r;
+  row.insertCell(5).innerText=obs;
+  // guardar para análisis
+  state.logs.push({mat,t,s,r,obs});
+  document.getElementById('m3').style.display='block';
+}
+
+document.getElementById('run-sim').addEventListener('click',runSimulation);
+
+// M3: análisis
+let chart=null;
+document.getElementById('calc-time').addEventListener('click',()=>{
+  const lh = parseFloat(document.getElementById('layer-height').value);
+  const oh = parseFloat(document.getElementById('object-height').value);
+  const s = state.logs.length? state.logs[state.logs.length-1].s : parseInt(document.getElementById('speed').value);
+  const layers = Math.max(1, Math.round(oh/lh));
+  const estTime = (layers * (1 / s) * 60).toFixed(1); // min (simulado)
+  document.getElementById('time-result').textContent = `Tiempo estimado: ${estTime} min (modelo simplificado)`;
+  // gráfico ejemplo: calidad hipotética vs temperatura
+  const temps = state.logs.map(l=>l.t).slice(-6);
+  const qualities = state.logs.map(l=>Math.max(0,100 - Math.abs(200 - l.t) - (l.s-60))).slice(-6);
+  if(chart) chart.destroy();
+  const ctx = document.getElementById('chart').getContext('2d');
+  chart = new Chart(ctx,{type:'line',data:{labels:temps.length?temps:['200'],datasets:[{label:'Calidad estimada',data:qualities.length?qualities:[80],borderColor:'#2fb4ff',fill:false}]},options:{responsive:true}});
+  document.getElementById('m4').style.display='block';
+});
+
+// M4: diseñador simple 2D -> STL ASCII generator + simple G-code generator (layer-by-layer mock)
+const canvas = document.getElementById('designer-canvas');
+const ctx = canvas.getContext('2d');
+function renderShape(){
+  const shape = document.getElementById('shape').value;
+  const w = parseFloat(document.getElementById('dim1').value);
+  const d = parseFloat(document.getElementById('dim2').value);
+  const h = parseFloat(document.getElementById('dim3').value);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='#2fb4ff'; ctx.strokeStyle='#ff7a18'; ctx.lineWidth=2;
+  // dibujar vista frontal estilizada
+  if(shape==='box'){
+    ctx.fillRect(40,40,w*6, h*6);
+    ctx.strokeRect(40,40,w*6,h*6);
+  } else if(shape==='cyl'){
+    ctx.beginPath(); ctx.ellipse(240,120,w*3,h*3,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  } else if(shape==='bracket'){
+    ctx.fillRect(40,40,w*5,20); ctx.fillRect(40,40,20,h*6);
+    ctx.strokeRect(40,40,w*5,20); ctx.strokeRect(40,40,20,h*6);
+  }
+}
+
+document.getElementById('render-btn').addEventListener('click',renderShape);
+
+function generateSTLContent(){
+  // Genera un STL ASCII sencillo basado en bounding box del objeto (prototipo)
+  const w = parseFloat(document.getElementById('dim1').value);
+  const d = parseFloat(document.getElementById('dim2').value);
+  const h = parseFloat(document.getElementById('dim3').value);
+  // caja simple: 12 triángulos por faces
+  const vertices = [
+    [0,0,0],[w,0,0],[w,d,0],[0,d,0],
+    [0,0,h],[w,0,h],[w,d,h],[0,d,h]
+  ];
+  const faces = [
+    [0,1,2],[0,2,3], // bottom
+    [4,5,6],[4,6,7], // top
+    [0,1,5],[0,5,4], // front
+    [1,2,6],[1,6,5],
+    [2,3,7],[2,7,6],
+    [3,0,4],[3,4,7]
+  ];
+  let stl = 'solid object\n';
+  faces.forEach(f=>{
+    stl += ' facet normal 0 0 0\n outer loop\n';
+    stl += `  vertex ${vertices[f[0]].join(' ')}\n`;
+    stl += `  vertex ${vertices[f[1]].join(' ')}\n`;
+    stl += `  vertex ${vertices[f[2]].join(' ')}\n`;
+    stl += ' endloop\n endfacet\n';
+  });
+  stl += 'endsolid object\n';
+  return stl;
+}
+
+function downloadBlob(content, mime, filename, linkId){
+  const blob = new Blob([content], {type: mime});
+  const url = URL.createObjectURL(blob);
+  const link = document.getElementById(linkId);
+  link.href = url; link.style.display='inline'; link.download = filename;
+}
+
+function generateGcode(){
+  // Generador simplificado de G-code: capas horizontales con lineas de perímetro
+  const w = parseFloat(document.getElementById('dim1').value);
+  const d = parseFloat(document.getElementById('dim2').value);
+  const h = parseFloat(document.getElementById('dim3').value);
+  const lh = parseFloat(document.getElementById('layer-height').value) || 0.2;
+  const layers = Math.max(1, Math.round(h / lh));
+  let g = '; G-code simplificado generado por Laboratorio STEM\n';
+  g += 'G21 ; mm\nG90 ; absolute\n';
+  for(let L=0; L<layers; L++){
+    const z = (L+1)*lh;
+    g += `; Layer ${L+1} z=${z}\n`;
+    g += `G1 Z${z.toFixed(2)} F3000\n`;
+    g += `G1 X0 Y0 F1500\n`;
+    g += `G1 X${w} Y0 F1500\n`;
+    g += `G1 X${w} Y${d} F1500\n`;
+    g += `G1 X0 Y${d} F1500\n`;
+    g += `G1 X0 Y0 F1500\n`;
+  }
+  g += '; fin de gcode\n';
+  return g;
+}
+
+document.getElementById('export-stl').addEventListener('click',()=>{
+  const stl = generateSTLContent();
+  downloadBlob(stl,'application/sla','piece.stl','stl-link');
+});
+
+document.getElementById('export-gcode').addEventListener('click',()=>{
+  const g = generateGcode();
+  downloadBlob(g,'text/plain','piece.gcode','gcode-link');
+});
+
+// Envío de proyecto
+document.getElementById('submit-project').addEventListener('click',()=>{
+  const problem = document.getElementById('problem').value.trim();
+  const req = document.getElementById('requirement').value.trim();
+  const summary = document.getElementById('solution-summary').value.trim();
+  if(problem.length<20){document.getElementById('project-feedback').innerText='Describe con más detalle el problema (mín 20 caracteres).';return;}
+  if(summary.length<150){document.getElementById('project-feedback').innerText='El resumen debe tener al menos 150 caracteres.';return;}
+  document.getElementById('project-feedback').innerText='✅ Proyecto enviado. STL y G-code disponibles para descarga.';
+});
+</script>
+</body>
+</html>
+

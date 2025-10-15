@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Proyecto Escolar STEM: Casa Inteligente (Diseño y Eficiencia)</title>
+<style>
+/* Estilos CSS Base para la Estructura Limpia */
+:root{
+  --accent:#ffb703; --muted:#9fbcd9; --good:#00ffb3; --danger:#ff4500;
+  --panel-bg: rgba(0,0,0,0.65); 
+  --project-color: #00e0ff; 
+  --design-bg: #092c42; /* Fondo para el tablero de ideas */
+}
+*{box-sizing:border-box}
+body{
+    margin:0;
+    font-family:Inter, "Segoe UI", Arial, sans-serif;
+    background:linear-gradient(180deg,#04060a,#081822);
+    color:#e6f7ff;
+    overflow:hidden;
+}
+header{
+    padding:12px;
+    text-align:center;
+    background:linear-gradient(180deg,#061526,#072733);
+    border-bottom:2px solid rgba(255,183,3,0.06);
+}
+h1{margin:0;color:var(--project-color)}
+
+/* --- ESTRUCTURA PRINCIPAL: Dashboard de Diseño --- */
+main{
+  display:grid;
+  /* Tablero de Ideas (45%) | Herramientas (55%) */
+  grid-template-columns: 1fr 1.3fr; 
+  gap:16px;
+  height:calc(100vh - 60px); 
+  padding:16px;
+}
+
+/* Columna Izquierda: Listas de Tareas */
+#ideas-column {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    height: 100%;
+    overflow-y: auto; /* CORRECCIÓN: Permitir scroll */
+    padding-right: 4px; 
+}
+/* Columna Derecha: Documentación/Métricas */
+#tools-column {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    height: 100%; 
+    overflow-y: auto; 
+    padding-bottom: 20px; 
+}
+
+
+/* Estilos de Paneles */
+.panel{background:var(--panel-bg);padding:16px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);overflow:visible;}
+.panel h2 { color: var(--project-color); border-bottom: 1px solid rgba(0,224,255,0.2); padding-bottom: 6px; margin-top: 0; }
+.panel h3 { color: var(--accent); margin-top: 10px; margin-bottom: 6px;}
+
+.controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+button{background:var(--accent);color:#001;border:0;padding:8px 10px;border-radius:8px;cursor:pointer;font-weight:700; transition: background 0.2s;flex-grow:1;min-width: 120px;}
+button:hover { background: #ffc94e; }
+button.secondary{background:transparent;color:#e6f7ff;border:1px solid rgba(255,255,255,0.06);flex-grow:1;}
+
+/* --- NUEVO: Panel de Navegación --- */
+.nav-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+}
+.nav-buttons button {
+    background: rgba(0, 224, 255, 0.1);
+    color: var(--project-color);
+    border: 1px solid rgba(0, 224, 255, 0.5);
+    text-align: left;
+    padding: 12px;
+    font-weight: 700;
+    font-size: 1rem;
+    transition: background 0.2s, color 0.2s;
+    width: 100%;
+}
+.nav-buttons button:hover {
+    background: var(--project-color);
+    color: #04060a;
+}
+
+
+/* --- TABLERO DE FLUJO DE TRABAJO (Diseño) --- */
+#design-workflow-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Ideas, En Proceso, Finalizado */
+    gap: 12px;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+.design-lane {
+    background: var(--design-bg);
+    border-radius: 8px;
+    padding: 10px;
+    min-height: 150px;
+    border-top: 3px solid var(--accent);
+}
+.design-lane h3 { 
+    color: var(--accent); 
+    font-size: 1.1rem; 
+    margin: 0 0 10px 0;
+    text-align: center;
+}
+.idea-card {
+    background: rgba(255,255,255,0.08);
+    padding: 8px;
+    border-radius: 4px;
+    margin-bottom: 6px;
+    cursor: grab;
+    border-left: 3px solid var(--project-color);
+}
+.idea-card.finalizado {
+    border-left: 3px solid var(--good);
+    opacity: 0.7;
+    text-decoration: line-through;
+}
+
+/* --- ESTILOS ESPECÍFICOS DEL PROYECTO --- */
+.metric-row { display: flex; justify-content: space-between; margin-top: 4px; font-size: 0.95rem; }
+.metric-value { font-weight: bold; color: var(--project-color); }
+
+#design-output-area, #analisis-area {width:100%;min-height:150px;border-radius:8px;padding:8px;border:1px solid rgba(255,255,255,0.04);background:rgba(0,0,0,0.5);color:#e6f7ff}
+
+/* Media Query para pantallas pequeñas */
+@media (max-width:1200px){
+    main{
+        grid-template-columns: 1fr;
+        height: auto;
+        padding: 12px;
+    } 
+    #ideas-column { order: 1; height: auto; padding-right: 0;} /* Ajustado para móvil */
+    #tools-column { order: 2; height: auto; }
+    #design-workflow-container { grid-template-columns: 1fr; } 
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>🏡 Proyecto Escolar STEM: Diseño de Casa Inteligente</h1>
+  <div class="small">Plataforma de **Investigación, Esquematización y Prototipado** para el proyecto de innovación.</div>
+</header>
+
+<main>
+    <div id="ideas-column">
+        
+        <div id="navigation-panel" class="panel">
+            <h2>Navegación del Proyecto</h2>
+            <div class="nav-buttons">
+                <button onclick="scrollToSection('project-ideas')">1. Investigación (Ideas)</button>
+                <button onclick="scrollToSection('design-log')">2. Esquematización</button>
+                <button onclick="scrollToSection('prototyping-metrics')">3. Prototipado</button>
+                <button onclick="scrollToSection('analysis')">4. Análisis Final</button>
+            </div>
+        </div>
+
+        <div id="project-ideas" class="panel">
+            <h2>1. Investigación: Lista de Ideas (Requisitos)</h2>
+            <div id="ideas-list">
+                </div>
+            <h3 style="margin-top:10px;">Añadir Requisito o Idea</h3>
+            <p class="small" style="color: var(--muted);">Redacta tus ideas de funcionalidad (Ej: La luz debe encenderse automáticamente).</p>
+            <textarea id="new-idea-input" placeholder="Ej: Quiero que el sistema de calefacción se apague si no hay personas en la sala para evitar gastos innecesarios."></textarea>
+            <div style="display:flex;gap:8px;margin-top:8px">
+                <button id="btnAddIdea">➕ Añadir Idea</button>
+                <button id="btnStartCycle" class="secondary">▶️ Iniciar Ciclo de Diseño</button>
+            </div>
+        </div>
+
+        <div class="panel" style="flex-grow: 1;">
+            <h2 style="border: none; padding-bottom: 0; margin-bottom: 12px;">Flujo de Diseño (Tareas Actuales)</h2>
+            <p class="small">Arrastra las ideas a **En Proceso** cuando empieces el diseño, y a **Finalizado** cuando lo valides.</p>
+            <div id="design-workflow-container">
+                <div id="todo-lane" class="design-lane">
+                    <h3>Ideas Seleccionadas</h3>
+                    </div>
+                <div id="in-progress-lane" class="design-lane">
+                    <h3>En Proceso (Diseñando)</h3>
+                </div>
+                <div id="done-lane" class="design-lane">
+                    <h3>Finalizado (Validado)</h3>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="tools-column">
+        
+        <div id="design-log" class="panel">
+            <h2>2. Esquematización (Diseño Lógico)</h2>
+            <p class="small">Describe el **diseño electrónico y la lógica de funcionamiento** de las ideas que están **"En Proceso"**.</p>
+            <textarea id="design-output-area" placeholder="Documenta tu proceso: Diagrama de bloques, componentes (sensores, microcontrolador) elegidos y cómo se conectan. Justifica tus decisiones de ingeniería."></textarea>
+            <div style="display:flex;gap:8px;margin-top:8px">
+                <button id="btnSaveDesign">💾 Guardar Esquema</button>
+            </div>
+        </div>
+
+        <div id="prototyping-metrics" class="panel">
+            <h2>3. Prototipado (Validación de Eficiencia)</h2>
+            <p class="small">Simula el **impacto** de tu prototipo en el consumo eléctrico de la casa. ¡El objetivo de **Innovación** es ahorrar un **mínimo de 30%**!</p>
+            
+            <h3 style="color: var(--project-color); margin-top: 12px;">Métricas de Validación</h3>
+            <div class="metric-row">
+                <span>Consumo Base (Sin Innovación):</span> 
+                <span id="metric-base-consumption" class="metric-value">550 kW/h</span>
+            </div>
+            <div class="metric-row">
+                <span>Ahorro Energético Logrado:</span> 
+                <span id="metric-saving" class="metric-value">0%</span>
+            </div>
+            <div class="metric-row">
+                <span>Consumo Estimado (Con Prototipo):</span> 
+                <span id="metric-final-consumption" class="metric-value">550 kW/h</span>
+            </div>
+            <div class="metric-row">
+                <span>Recursos Necesarios (Hardware):</span> 
+                <span id="metric-resources" class="metric-value">Básico</span>
+            </div>
+            
+            <div style="display:flex;gap:8px;margin-top:10px">
+                <button id="btnSimulateDesign">⚡ Validar Prototipo</button>
+            </div>
+        </div>
+
+        <div id="analysis" class="panel">
+            <h2>Análisis Final (Lecciones Aprendidas)</h2>
+            <p class="small">Reflexiona sobre el ciclo de diseño. **Preguntas clave:** ¿Funcionó el prototipo como esperaban? ¿Qué problemas de ingeniería resolvieron? ¿Qué harían diferente si inician un nuevo ciclo?</p>
+            <textarea id="analisis-area" placeholder="Escribe tu reflexión y conclusiones finales aquí..."></textarea>
+            <div style="display:flex;gap:8px;margin-top:8px">
+                <button id="btnSaveAnalysis">💾 Guardar Análisis Final</button>
+            </div>
+        </div>
+    </div>
+</main>
+
+
+<script>
+// --- FUNCIÓN DE NAVEGACIÓN AÑADIDA ---
+function scrollToSection(sectionId) {
+    const element = document.getElementById(sectionId);
+    if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Efecto visual de resaltado temporal
+        element.style.transition = 'box-shadow 0.5s ease-in-out';
+        element.style.boxShadow = '0 0 25px var(--project-color)';
+        setTimeout(() => {
+            element.style.boxShadow = 'none';
+        }, 1500); // El brillo desaparece después de 1.5 segundos
+    }
+}
+
+
+// --- CÓDIGO JAVASCRIPT: Lógica de Flujo de Diseño y Simulación ---
+
+// --- VARIABLES GLOBALES ---
+const BASE_CONSUMPTION = 550; // kWh/mes
+let ideaIdCounter = 1;
+let ideas = []; 
+let currentSavingPercent = 0; 
+let currentResources = 'Básico'; // Simplificamos "coste" a "recursos"
+let simulated = false;
+
+// Definición inicial de Ideas (Requisitos)
+const initialIdeas = [
+    { id: 'I-1', text: 'Apagado automático de luces por falta de movimiento para ahorrar energía.', status: 'backlog', effort: 3, saving: 10, resources: 'Sensores de movimiento' },
+    { id: 'I-2', text: 'Controlar el aire acondicionado de forma remota.', status: 'backlog', effort: 5, saving: 0, resources: 'Módulo WiFi' },
+    { id: 'I-3', text: 'Apagar la calefacción si hay una ventana abierta para evitar desperdicio.', status: 'backlog', effort: 8, saving: 15, resources: 'Sensor de contacto' },
+    { id: 'I-4', text: 'Sistema de riego automático basado en humedad del suelo.', status: 'backlog', effort: 5, saving: 5, resources: 'Sensores de humedad' },
+    { id: 'I-5', text: 'Integración con paneles solares para reducir el consumo de la red.', status: 'backlog', effort: 13, saving: 25, resources: 'Microcontrolador avanzado' }
+];
+ideas = initialIdeas;
+
+// --- REFERENCIAS DOM ---
+const dom = {
+  ideasList: document.getElementById('ideas-list'),
+  newIdeaInput: document.getElementById('new-idea-input'),
+  btnAddIdea: document.getElementById('btnAddIdea'),
+  btnStartCycle: document.getElementById('btnStartCycle'),
+  todoLane: document.getElementById('todo-lane'),
+  inProgressLane: document.getElementById('in-progress-lane'),
+  doneLane: document.getElementById('done-lane'),
+  
+  designOutputArea: document.getElementById('design-output-area'),
+  btnSaveDesign: document.getElementById('btnSaveDesign'),
+  btnSimulateDesign: document.getElementById('btnSimulateDesign'),
+
+  metricBaseConsumption: document.getElementById('metric-base-consumption'),
+  metricSaving: document.getElementById('metric-saving'),
+  metricFinalConsumption: document.getElementById('metric-final-consumption'),
+  metricResources: document.getElementById('metric-resources'),
+
+  analisisArea: document.getElementById('analisis-area'),
+  btnSaveAnalysis: document.getElementById('btnSaveAnalysis'),
+};
+
+// --- CORE FUNCTIONS (FLUJO DE DISEÑO) ---
+
+function init(){
+    bindEvents();
+    renderBacklogs();
+    updateHouseMetrics();
+}
+
+function createIdeaCard(idea){
+    const card = document.createElement('div');
+    card.className = 'idea-card ' + (idea.status === 'done' ? 'finalizado' : '');
+    card.id = idea.id;
+    
+    // Solo se permite arrastrar si está en una columna del Ciclo (Ideas Seleccionadas, En Proceso)
+    card.draggable = idea.status !== 'backlog'; 
+    
+    card.innerHTML = `<div>${idea.text}</div>
+                      <div class="small" style="color:var(--muted); margin-top: 4px;">**Esfuerzo Estimado: ${idea.effort}** | Recursos: ${idea.resources}</div>`;
+    
+    // Configuración de Drag and Drop
+    if (idea.status !== 'backlog') {
+        card.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', idea.id);
+            card.style.opacity = '0.5';
+        });
+        card.addEventListener('dragend', () => {
+            card.style.opacity = '1';
+        });
+    }
+    return card;
+}
+
+function renderBacklogs(){
+    dom.ideasList.innerHTML = '';
+    dom.todoLane.innerHTML = '<h3>Ideas Seleccionadas</h3>';
+    dom.inProgressLane.innerHTML = '<h3>En Proceso (Diseñando)</h3>';
+    dom.doneLane.innerHTML = '<h3>Finalizado (Validado)</h3>';
+
+    // RENDER LISTA GENERAL DE IDEAS (Ordenado por esfuerzo)
+    const backlog = ideas.filter(s => s.status === 'backlog').sort((a, b) => b.effort - a.effort);
+    backlog.forEach(idea => {
+        const card = createIdeaCard(idea);
+        card.innerHTML += `<button onclick="addToCycle('${idea.id}')" style="margin-top: 6px; font-size: 0.8rem; padding: 4px; min-width: auto; background: var(--design-bg); color: var(--project-color); border: 1px solid var(--project-color);">Seleccionar</button>`;
+        dom.ideasList.appendChild(card);
+    });
+    
+    // RENDER FLUJO DE DISEÑO
+    const cycleIdeas = ideas.filter(s => s.status !== 'backlog');
+    cycleIdeas.forEach(idea => {
+        const card = createIdeaCard(idea);
+        if (idea.status === 'todo') dom.todoLane.appendChild(card);
+        else if (idea.status === 'in-progress') dom.inProgressLane.appendChild(card);
+        else if (idea.status === 'done') dom.doneLane.appendChild(card);
+    });
+}
+
+function addIdea(){
+    const text = dom.newIdeaInput.value.trim();
+    if (text.length < 10) { 
+        alert('La idea debe ser más descriptiva.'); 
+        return; 
+    }
+    // Lógica de asignación de métricas simuladas
+    const newIdea = {
+        id: 'I-' + (++ideaIdCounter),
+        text: text,
+        status: 'backlog',
+        effort: Math.ceil(Math.random() * 13), 
+        saving: Math.floor(Math.random() * 15),
+        resources: ['Básico', 'Intermedio', 'Avanzado'][Math.floor(Math.random() * 3)]
+    };
+    ideas.push(newIdea);
+    dom.newIdeaInput.value = '';
+    renderBacklogs();
+    console.log(`[LOG] ➕ Nueva idea '${newIdea.id}' añadida a la Lista de Ideas.`);
+}
+
+function addToCycle(id){
+    const idea = ideas.find(s => s.id === id);
+    if (idea && idea.status === 'backlog'){
+        idea.status = 'todo';
+        idea.draggable = true;
+        renderBacklogs();
+        console.log(`[LOG] ▶️ Idea '${id}' movida al Ciclo de Diseño (Ideas Seleccionadas).`);
+    }
+}
+
+function startCycle(){
+    if (ideas.filter(s => s.status !== 'backlog').length === 0) {
+        alert('Debes seleccionar al menos una idea de la lista general antes de iniciar el Ciclo de Diseño.');
+        return;
+    }
+    alert('¡Ciclo de Diseño Iniciado! Comienca el diseño lógico en la columna de la derecha y arrastra las ideas a "En Proceso" y "Finalizado" según avances.');
+    console.log('[LOG] 🚀 Ciclo de Diseño iniciado.');
+}
+
+function handleDrop(e, status){
+    e.preventDefault();
+    const id = e.dataTransfer.getData('text/plain');
+    const idea = ideas.find(s => s.id === id);
+    if (idea){
+        idea.status = status;
+        renderBacklogs();
+        console.log(`[LOG] ➡️ Idea '${id}' movida a la columna '${status.toUpperCase()}'.`);
+        if (status === 'done') {
+            updateMetricsFromCycle();
+        }
+    }
+}
+
+// --- CORE FUNCTIONS (PROTOTIPADO) ---
+
+function updateHouseMetrics(){
+    dom.metricBaseConsumption.textContent = BASE_CONSUMPTION + ' kW/h';
+    const finalConsumption = BASE_CONSUMPTION * (1 - currentSavingPercent/100);
+    
+    dom.metricSaving.textContent = currentSavingPercent.toFixed(1) + '%';
+    dom.metricFinalConsumption.textContent = finalConsumption.toFixed(1) + ' kW/h';
+    dom.metricResources.textContent = currentResources;
+
+    // Colores basados en objetivos (ahorro >= 30%)
+    if (simulated) {
+        dom.metricSaving.style.color = currentSavingPercent >= 30 ? 'var(--good)' : 'var(--danger)';
+        dom.metricFinalConsumption.style.color = currentSavingPercent >= 30 ? 'var(--good)' : 'var(--danger)';
+    } else {
+        dom.metricSaving.style.color = 'var(--project-color)';
+        dom.metricFinalConsumption.style.color = 'var(--project-color)';
+    }
+}
+
+function updateMetricsFromCycle(){
+    // Calcula el impacto total de las ideas "Finalizado"
+    const doneIdeas = ideas.filter(s => s.status === 'done');
+    let totalSaving = doneIdeas.reduce((sum, s) => sum + s.saving, 0);
+    
+    // Determinar el nivel de recursos más alto usado
+    const resourceLevels = { 'Básico': 1, 'Intermedio': 2, 'Avanzado': 3 };
+    let maxLevel = 1;
+    doneIdeas.forEach(idea => {
+        maxLevel = Math.max(maxLevel, resourceLevels[idea.resources] || 1);
+    });
+    currentResources = Object.keys(resourceLevels).find(key => resourceLevels[key] === maxLevel);
+    
+    currentSavingPercent = Math.min(70, totalSaving); // Ahorro máximo realista
+    simulated = true;
+    updateHouseMetrics();
+    console.log(`[LOG] ✅ Validación: Se han simulado ${doneIdeas.length} ideas finalizadas.`);
+}
+
+
+function simulateDesign(){
+    const doneCount = ideas.filter(s => s.status === 'done').length;
+    if (doneCount === 0){
+        alert('Debes mover a la columna "Finalizado" al menos una idea de diseño antes de realizar la Validación del Prototipo.');
+        return;
+    }
+    
+    if (dom.designOutputArea.value.trim().length < 50){
+        alert('¡Importante! Documenta tu diseño en la fase de "Esquematización" para el informe final.');
+    }
+    
+    updateMetricsFromCycle();
+    
+    const goalMet = currentSavingPercent >= 30;
+    const msg = goalMet 
+        ? '¡Objetivo de Ahorro logrado! El prototipo es eficiente y la innovación funciona.' 
+        : 'Aún no alcanzas el 30% de ahorro. Vuelve al inicio del flujo y selecciona más ideas enfocadas en la eficiencia para un nuevo Ciclo de Diseño.';
+        
+    alert(`Validación de Prototipo completada. ${msg}`);
+}
+
+// --- UTILITIES (Guardar archivos) ---
+
+function saveContent(elementId, name, logMsg){
+    const text = document.getElementById(elementId).value.trim();
+    if (!text) return alert(`Escribe el contenido de ${name} antes de guardar.`);
+    
+    const fileName = `${name.toLowerCase().replace(/ /g,'_')}_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.txt`;
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = fileName; a.click(); URL.revokeObjectURL(url);
+    
+    console.log(`[LOG] ${logMsg}`);
+    alert(`${name} guardada correctamente.`);
+}
+
+// --- EVENT BINDING ---
+function bindEvents(){
+  dom.btnAddIdea.onclick = addIdea;
+  dom.btnStartCycle.onclick = startCycle;
+  dom.btnSimulateDesign.onclick = simulateDesign;
+  
+  dom.btnSaveDesign.onclick = () => saveContent('design-output-area', 'Esquematizacion', '💾 Esquema de diseño guardado.');
+  dom.btnSaveAnalysis.onclick = () => saveContent('analisis-area', 'Analisis_Final', '💾 Análisis Final guardado.');
+
+  // Configuración de Drag and Drop para el flujo de diseño
+  const lanes = [dom.todoLane, dom.inProgressLane, dom.doneLane];
+  lanes.forEach(lane => {
+      lane.addEventListener('dragover', (e) => {
+          e.preventDefault(); 
+          e.currentTarget.style.backgroundColor = 'rgba(0, 224, 255, 0.1)';
+      });
+      lane.addEventListener('dragleave', (e) => {
+          e.currentTarget.style.backgroundColor = 'var(--design-bg)';
+      });
+      lane.addEventListener('drop', (e) => {
+          e.currentTarget.style.backgroundColor = 'var(--design-bg)';
+          handleDrop(e, lane.id.replace('-lane', ''));
+      });
+  });
+}
+
+/* Exponer funciones globales (necesario para los botones generados dinámicamente) */
+window.addToCycle = addToCycle;
+
+/* Start */
+init();
+</script>
+</body>
+</html>

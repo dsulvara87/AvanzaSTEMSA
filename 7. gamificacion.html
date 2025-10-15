@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Investigación — Las Acacias (Gamificación)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #071428; --panel: #0f2430; --accent: #2fb4ff; --good: #06d6a0; --muted: rgba(255,255,255,0.04); --danger: #ff6b6b;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Inter, system-ui, Segoe UI, Arial; background: linear-gradient(180deg, var(--bg), #071826); color: #e6f5fb; }
+  header { padding: 14px; text-align: center; background: linear-gradient(90deg, var(--accent), #ff7a18); color: #041222; }
+  header h1 { margin: 0; font-size: 1.15rem; }
+  .app { max-width: 1200px; margin: 14px auto; display: grid; grid-template-columns: 720px 1fr; gap: 14px; padding: 12px; }
+  
+  /* MAP */
+  #game { width: 720px; height: 640px; background: #08202a; border-radius: 10px; position: relative; overflow: hidden; padding: 12px; border: 1px solid rgba(255,255,255,0.03); }
+  #game::after {
+    content: ""; position: absolute; inset: 12px; border-radius: 6px; background:
+    linear-gradient(transparent 28px, rgba(255,255,255,0.02) 28px),
+    linear-gradient(90deg, transparent 28px, rgba(255,255,255,0.02) 28px);
+    background-size: 64px 64px, 64px 64px; opacity: 0.32; pointer-events: none;
+  }
+  .avatar { width: 46px; height: 46px; border-radius: 10px; background: #ffd166; position: absolute; left: 60px; top: 40px; display: flex; align-items: center; justify-content: center; font-weight: 800; z-index: 40; box-shadow: 0 10px 26px rgba(0,0,0,0.5); transition: transform .06s; }
+  .site { width: 48px; height: 48px; border-radius: 8px; position: absolute; display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; border: 2px solid rgba(0,0,0,0.12); z-index: 20; background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent); }
+  .site.locked { filter: grayscale(1); opacity: 0.45; pointer-events: none; }
+  .site.solved { background: linear-gradient(90deg, var(--good), #39d6a8); color: #04201a; border-color: rgba(0,0,0,0.12); }
+  .obstacle { width: 36px; height: 36px; border-radius: 8px; position: absolute; display: flex; align-items: center; justify-content: center; font-size: 18px; z-index: 35; pointer-events: none; }
+  .obstacle.danger { background: linear-gradient(180deg, var(--danger), #ff9b9b); box-shadow: 0 8px 16px rgba(255,107,107,0.12); }
+
+  /* PANEL */
+  .panel { background: linear-gradient(180deg, var(--panel), rgba(6,13,18,0.95)); border-radius: 10px; padding: 14px; min-height: 640px; border: 1px solid rgba(255,255,255,0.03); }
+  h2 { margin: 6px 0; color: var(--accent); }
+  .muted { color: #a7dbe8; }
+  .progress { height: 12px; background: var(--muted); border-radius: 8px; overflow: hidden; margin-top: 8px; }
+  .bar { height: 100%; background: linear-gradient(90deg, var(--accent), #ff7a18); width: 0%; transition: width .25s; }
+  .small { font-size: 0.95rem; color: #cfeefc; }
+  .challenge { background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px; margin-top: 12px; }
+  .opts { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+  .opts button { background: #0d2b36; border: none; color: #e6f5fb; padding: 10px; border-radius: 8px; cursor: pointer; text-align: left; }
+  .note { background: rgba(255,255,255,0.02); padding: 8px; border-radius: 8px; margin-top: 8px; font-size: 0.92rem; }
+  .clues { margin-top: 12px; max-height: 220px; overflow: auto; padding: 8px; background: rgba(255,255,255,0.02); border-radius: 8px; }
+  .clue { padding: 8px; border-bottom: 1px dashed rgba(255,255,255,0.03); font-size: 0.95rem; }
+  .diag-area { display: flex; gap: 8px; margin-top: 8px; }
+  .diag-column { flex: 1; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px; min-height: 120px; }
+  .draggable { background: #fff; color: #111; padding: 8px; border-radius: 8px; margin: 6px 0; cursor: grab; }
+  .drop-over { outline: 2px dashed rgba(255,255,255,0.12); }
+  .btn { background: linear-gradient(90deg, var(--accent), #ff7a18); border: none; padding: 8px 10px; border-radius: 8px; color: #041222; cursor: pointer; }
+  footer { margin-top: 12px; text-align: center; color: #98cbdc; padding-bottom: 18px; }
+  .intro { position: fixed; inset: 0; background: linear-gradient(180deg, rgba(4,6,10,0.92), rgba(4,6,10,0.98)); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 18px; }
+  .card { width: 940px; max-width: 95%; background: #0f2430; border-radius: 12px; padding: 18px; border: 1px solid rgba(255,255,255,0.04); }
+  
+  @media (max-width: 980px) {
+    .app { grid-template-columns: 1fr; }
+    #game { width: 100%; height: 520px; }
+    .panel { min-height: 520px; }
+    .diag-area { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<header><h1>Investigación en Las Acacias — Carrera de observación</h1><div class="small">Recorre las estaciones, recolecta pistas y construye un diagnóstico.</div></header>
+
+<div id="intro" class="intro" role="dialog" aria-modal="true">
+  <div class="card">
+    <h2>Unidad didáctica — Salud pública</h2>
+    <p class="muted"><strong>Contexto:</strong> En "Las Acacias" se reportan fiebres, diarreas y problemas respiratorios. Posibles causas: agua estancada, residuos, puestos sin higiene, animales sin control e infraestructura deficiente.</p>
+    <h3>Objetivos</h3>
+    <ul>
+      <li>Recolectar y organizar evidencia mediante observación.</li>
+      <li>Analizar pistas y generar un diagnóstico.</li>
+      <li>Proponer una solución basada en evidencia.</li>
+    </ul>
+    <h3>Instrucciones</h3>
+    <ol>
+      <li>Presiona <strong>Iniciar investigación</strong>.</li>
+      <li>Mueve el avatar con flechas o W/A/S/D.</li>
+      <li>Resuelve cada estación antes de que se acabe el temporizador. Si se agota: penalización parcial y la pista queda registrada como "no respondida a tiempo".</li>
+      <li>Evita obstáculos (restan puntos con cooldown).</li>
+      <li>Al terminar las 20 estaciones organiza las pistas y genera el diagnóstico.</li>
+    </ol>
+    <div style="display:flex;gap:10px;margin-top:12px">
+      <button id="btn-start" class="btn">Iniciar investigación</button>
+      <button id="btn-help" style="background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px;border-radius:8px;color:#e6f5fb">Resumen</button>
+      <div style="margin-left:auto;color:#cfeefc">Tiempo recomendado: 45–90 min</div>
+    </div>
+  </div>
+</div>
+
+<div class="app" id="app" aria-hidden="true" style="display:none">
+  <div id="game" tabindex="0" aria-label="Mapa del barrio">
+    <div id="avatar" class="avatar" title="Avatar">👩‍🔬</div>
+
+    <div class="site" data-key="charco" style="left:70px;top:40px">💧</div>
+    <div class="site locked" data-key="basura" style="left:200px;top:40px">🗑️</div>
+    <div class="site locked" data-key="llantas" style="left:340px;top:40px">🛞</div>
+    <div class="site locked" data-key="mercado" style="left:500px;top:40px">🛒</div>
+
+    <div class="site locked" data-key="pollo" style="left:60px;top:170px">🍗</div>
+    <div class="site locked" data-key="verduras" style="left:190px;top:170px">🥬</div>
+    <div class="site locked" data-key="aguas" style="left:330px;top:170px">🏠</div>
+    <div class="site locked" data-key="acueducto" style="left:500px;top:170px">🚰</div>
+
+    <div class="site locked" data-key="ratas" style="left:30px;top:300px">🐀</div>
+    <div class="site locked" data-key="perros" style="left:150px;top:300px">🐕</div>
+    <div class="site locked" data-key="basura2" style="left:270px;top:300px">🚮</div>
+    <div class="site locked" data-key="bano" style="left:420px;top:300px">🚽</div>
+
+    <div class="site locked" data-key="cables" style="left:560px;top:300px">⚡</div>
+    <div class="site locked" data-key="frutas" style="left:480px;top:380px">🍎</div>
+    <div class="site locked" data-key="aguaemb" style="left:340px;top:380px">🧴</div>
+    <div class="site locked" data-key="vac" style="left:200px;top:380px">🧑‍⚕️</div>
+
+    <div class="site locked" data-key="lab" style="left:100px;top:460px">🔬</div>
+    <div class="site locked" data-key="medic" style="left:300px;top:480px">💊</div>
+    <div class="site locked" data-key="mask" style="left:520px;top:480px">😷</div>
+
+    <div class="obstacle danger" data-penalty="1" style="left:180px;top:120px">☠️</div>
+    <div class="obstacle danger" data-penalty="1" style="left:420px;top:220px">🕳️</div>
+    <div class="obstacle danger" data-penalty="2" style="left:480px;top:340px">⚡</div>
+  </div>
+
+  <aside class="panel" role="region" aria-live="polite">
+    <h2>Panel de investigación</h2>
+    <div class="small">Mueve el avatar con flechas o W/A/S/D. Evita obstáculos y controla el tiempo por estación.</div>
+
+    <div class="progress" aria-hidden="true"><div id="bar" class="bar" style="width:0%"></div></div>
+    <div style="display:flex;justify-content:space-between;margin-top:8px">
+      <div class="small">Escenarios completados: <strong id="count">0 / 20</strong></div>
+      <div class="small">Puntaje: <strong id="score">0</strong></div>
+    </div>
+
+    <div style="margin-top:8px" class="small">Temporizador actual: <strong id="timer">—</strong></div>
+
+    <div id="challenge" class="challenge hidden" aria-live="assertive">
+      <div class="small" id="site-name"></div>
+      <div id="question" style="font-weight:700;margin-top:6px"></div>
+      <div id="options" class="opts"></div>
+      <div id="edu" class="note"></div>
+    </div>
+
+    <div class="note" style="margin-top:12px">
+      <strong>Cuaderno de Pistas</strong>
+      <div id="clues" class="clues"></div>
+    </div>
+
+    <div id="finalPanel" class="note hidden" style="margin-top:12px">
+      <h3>Diagnóstico interactivo</h3>
+      <div class="small">Arrastra las pistas desde el pool a las categorías y genera un borrador editable.</div>
+
+      <div class="diag-area" style="margin-top:8px">
+        <div class="diag-column">
+          <div style="font-weight:700;margin-bottom:6px">Pistas (arrástralas)</div>
+          <div id="pool" style="min-height:80px"></div>
+        </div>
+
+        <div style="flex:1">
+          <div style="font-weight:700;margin-bottom:6px">Clasifica</div>
+          <div class="diag-column drop-zone" id="cat-water" data-cat="Agua">Agua</div>
+          <div class="diag-column drop-zone" id="cat-waste" data-cat="Residuos" style="margin-top:8px">Residuos</div>
+          <div class="diag-column drop-zone" id="cat-animal" data-cat="Animales" style="margin-top:8px">Animales</div>
+          <div class="diag-column drop-zone" id="cat-food" data-cat="Alimentos" style="margin-top:8px">Alimentos</div>
+        </div>
+      </div>
+
+      <div style="margin-top:10px">
+        <label>Factor de riesgo (opcional)</label>
+        <select id="mainRisk" style="width:100%;padding:8px;margin-top:6px;background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.06)">
+          <option value="">(Detectar por clasificación)</option>
+          <option>Agua</option><option>Residuos</option><option>Animales</option><option>Alimentos</option><option>Infraestructura</option>
+        </select>
+      </div>
+
+      <div style="margin-top:8px">
+        <label>Enfermedad relacionada</label>
+        <select id="relatedDisease" style="width:100%;padding:8px;margin-top:6px;background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.06)">
+          <option value="">(Selecciona)</option>
+          <option>Dengue (vectorial)</option>
+          <option>Diarrea / Infecciones intestinales</option>
+          <option>Rabia</option>
+          <option>Infecciones respiratorias</option>
+          <option>No está claro</option>
+        </select>
+      </div>
+
+      <div style="margin-top:8px">
+        <label>Selecciona hasta 3 pistas críticas</label>
+        <div id="topClues" style="margin-top:6px;max-height:120px;overflow:auto"></div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button id="btn-gen" class="btn">Generar borrador</button>
+        <button id="btn-resetDiag" style="background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px;border-radius:8px;color:#e6f5fb">Reiniciar clasificación</button>
+      </div>
+
+      <div style="margin-top:12px">
+        <label>Borrador de diagnóstico (editable)</label>
+        <textarea id="draft" style="width:100%;height:100px;margin-top:6px;background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.06)"></textarea>
+
+        <label style="margin-top:8px">Solución (texto libre)</label>
+        <textarea id="solution" style="width:100%;height:80px;margin-top:6px;background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.06)"></textarea>
+
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button id="btn-export" class="btn">Exportar informe (PDF)</button>
+          <button id="btn-resetAll" style="background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px;border-radius:8px;color:#e6f5fb">Reiniciar todo</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<footer>Gamificación educativa — Diagnóstico interactivo · 20 estaciones</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+<script>
+/* ===========================
+  Datos: 20 estaciones (tipo mixto)
+  type: 'mcq', 'tf', 'math', 'choose', 'open'
+  =========================== */
+const SITES = {
+  charco:{name:'Charco en el parque', type:'mcq', q:'El agua estancada ¿qué riesgo presenta?', opts:['Mosquitos','Decoración','Mejora aire','Nada'], ans:'Mosquitos', clue:'Agua estancada es criadero (Aedes aegypti).', edu:'Eliminar criaderos reduce dengue.', time:60},
+  basura:{name:'Basura en la esquina', type:'tf', q:'La basura atrae roedores (V/F).', ans:true, clue:'Residuos atraen roedores y vectores.', edu:'Contenedores cerrados y recolección.', time:45},
+  llantas:{name:'Llantas con agua', type:'math', q:'Si 15 llantas tienen 0.6 L cada una, ¿cuántos L?', ans:9, clue:'15×0.6 = 9 L.', edu:'Disposición segura de llantas.', time:55},
+  mercado:{name:'Mercado popular', type:'choose', q:'¿Qué reduce más intoxicaciones alimentarias?', opts:['Cadena frío + lavado','Toldos','Cobrar bolsas','Vender rápido'], ans:'Cadena frío + lavado', clue:'Cadena de frío y lavado reducen bacterias.', edu:'Puntos de lavado y refrigeración.', time:70},
+  pollo:{name:'Puesto de pollo', type:'math', q:'12 - 5 + 8 = ?', ans:15, clue:'12-5+8=15.', edu:'Control de inventario.', time:40},
+  verduras:{name:'Puesto de verduras', type:'tf', q:'Lavar verduras reduce riesgos (V/F).', ans:true, clue:'Lavado reduce carga microbiana.', edu:'Estaciones de lavado.', time:40},
+  aguas:{name:'Casa con aguas negras', type:'choose', q:'Aguas negras expuestas → ¿consecuencia?', opts:['Diarreas / Enfermedades','Mejora estética','Más oxígeno'], ans:'Diarreas / Enfermedades', clue:'Aguas residuales transmiten patógenos.', edu:'Saneamiento.', time:60},
+  acueducto:{name:'Toma del acueducto', type:'mcq', q:'La cloración sirve para:', opts:['Eliminar microorganismos','Añadir nutrientes','Cambiar color','Hacer espuma'], ans:'Eliminar microorganismos', clue:'Cloración desinfecta agua potable.', edu:'Dosificación controlada.', time:50},
+  ratas:{name:'Alcantarilla con ratas', type:'choose', q:'¿Qué reduce roedores?', opts:['Gestión residuos + sellado','Pintar paredes','Instalar música','Colocar letreros'], ans:'Gestión residuos + sellado', clue:'Residuos y accesos abiertos favorecen roedores.', edu:'Control integrado.', time:55},
+  perros:{name:'Perros callejeros', type:'tf', q:'Vacunación y esterilización reducen rabia (V/F).', ans:true, clue:'Vacunación reduce riesgo de rabia.', edu:'Campañas y registro animal.', time:45},
+  basura2:{name:'Contenedor rebosado', type:'math', q:'1.2 T × 7 rutas = ? (T)', ans:8.4, clue:'1.2×7=8.4 T/día.', edu:'Optimizar rutas.', time:60},
+  bano:{name:'Baño comunitario', type:'mcq', q:'En baños públicos, ¿qué reduce más infecciones?', opts:['Agua y jabón disponible','Cerrar baños','Cobrar por uso','Plantas'], ans:'Agua y jabón disponible', clue:'Higiene reduce transmisión.', edu:'Mantenimiento y dispensadores.', time:45},
+  cables:{name:'Cableado expuesto', type:'choose', q:'Intervención para electrocuciones:', opts:['Reparación profesional','Instalar luces','Pintar','Colocar vallas'], ans:'Reparación profesional', clue:'Cables expuestos son peligrosos.', edu:'Intervención técnica.', time:50},
+  frutas:{name:'Puesto de frutas', type:'tf', q:'Dejar frutas al sol desinfecta (V/F).', ans:false, clue:'Calor no garantiza eliminación.', edu:'Buenas prácticas y lavado.', time:40},
+  aguaemb:{name:'Agua embotellada abierta', type:'mcq', q:'Riesgo de agua embotellada abierta por días:', opts:['Contaminación microbiana','Se vuelve mineral','Mejora sabor','Aumenta oxígeno'], ans:'Contaminación microbiana', clue:'Almacenamiento prolongado favorece microbios.', edu:'Rotación y sellado.', time:45},
+  vac:{name:'Puesto de vacunación', type:'mcq', q:'Inmunidad de rebaño significa:', opts:['Protección por alta cobertura','Solo inmunidad individual','Basta una vacuna','No sé'], ans:'Protección por alta cobertura', clue:'Cobertura protege a la comunidad.', edu:'Planificación de cobertura.', time:50},
+  lab:{name:'Laboratorio local', type:'choose', q:'Ventaja clave de laboratorio:', opts:['Confirmar agentes y acelerar respuesta','Hacer arte','Aumentar ventas','Almacenar equipos'], ans:'Confirmar agentes y acelerar respuesta', clue:'Confirmar agente facilita respuesta.', edu:'Diagnóstico rápido.', time:55},
+  medic:{name:'Medicamentos falsos', type:'tf', q:'Medicamentos falsificados causan fallos (V/F).', ans:true, clue:'Falsificación afecta tratamientos.', edu:'Trazabilidad y control.', time:45},
+  mask:{name:'Personas sin mascarilla', type:'open', q:'Propón acción comunitaria para reducir transmisión respiratoria (breve):', keywords:['mascarilla','ventilación','distanciamiento','higiene','filtración'], ans:null, clue:'Mascarillas + ventilación reducen transmisión.', edu:'Campañas y ventilación.', time:90}
+};
+
+/* ========== Estado ========== */
+let answers = {};
+let clues = [];
+let correctCount = 0;
+let points = 0;
+const total = Object.keys(SITES).length;
+
+/* UI refs */
+const introEl = document.getElementById('intro'), appEl = document.getElementById('app');
+const btnStart = document.getElementById('btn-start'), btnHelp = document.getElementById('btn-help');
+const avatar = document.getElementById('avatar'), GAME = document.getElementById('game');
+const bar = document.getElementById('bar'), countEl = document.getElementById('count'), scoreEl = document.getElementById('score');
+const timerEl = document.getElementById('timer'), challenge = document.getElementById('challenge');
+const siteName = document.getElementById('site-name'), questionEl = document.getElementById('question'), optionsEl = document.getElementById('options'), eduEl = document.getElementById('edu');
+const cluesEl = document.getElementById('clues'), finalPanel = document.getElementById('finalPanel');
+const poolEl = document.getElementById('pool'), btnGen = document.getElementById('btn-gen');
+const draftEl = document.getElementById('draft'), solutionEl = document.getElementById('solution');
+const btnExport = document.getElementById('btn-export'), btnResetAll = document.getElementById('btn-resetAll');
+const btnResetDiag = document.getElementById('btn-resetDiag');
+const mainRiskSel = document.getElementById('mainRisk'), relatedDiseaseSel = document.getElementById('relatedDisease');
+const topCluesContainer = document.getElementById('topClues');
+
+/* Movement control (normalize keys) */
+function nk(k) { return ('' + k).toLowerCase(); }
+let keys = {};
+document.addEventListener('keydown', e => { keys[nk(e.key)] = true; if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd'].includes(nk(e.key))) e.preventDefault(); });
+document.addEventListener('keyup', e => { keys[nk(e.key)] = false; });
+
+/* Avatar position */
+let pos = { x: 60, y: 40 }, speed = 9;
+avatar.style.left = pos.x + 'px'; avatar.style.top = pos.y + 'px';
+
+/* Obstacles: velocities + hit cooldown */
+const obstacleEls = Array.from(document.querySelectorAll('.obstacle')).map(el => {
+  const speedPx = 0.7 + Math.random() * 1.4;
+  const angle = Math.random() * Math.PI * 2;
+  return { el, dx: Math.cos(angle) * speedPx, dy: Math.sin(angle) * speedPx, lastHit: 0 };
+});
+
+/* Timer state */
+let currentKey = null, timerInterval = null, timeLeft = 0;
+
+/* Start */
+btnStart.addEventListener('click', () => { introEl.style.display = 'none'; appEl.style.display = 'grid'; appEl.setAttribute('aria-hidden', 'false'); GAME.focus(); });
+// quick help
+btnHelp.addEventListener('click', () => alert('Mover: flechas o W/A/S/D. Responde antes del temporizador. Evita obstáculos (restan puntos).'));
+
+/* Game loop */
+function gameLoop() {
+  const GW = GAME.clientWidth, GH = GAME.clientHeight;
+  let moved = false;
+  if (keys['arrowup'] || keys['w']) { pos.y = Math.max(6, pos.y - speed); moved = true; }
+  if (keys['arrowdown'] || keys['s']) { pos.y = Math.min(GH - avatar.offsetHeight - 6, pos.y + speed); moved = true; }
+  if (keys['arrowleft'] || keys['a']) { pos.x = Math.max(6, pos.x - speed); moved = true; }
+  if (keys['arrowright'] || keys['d']) { pos.x = Math.min(GW - avatar.offsetWidth - 6, pos.x + speed); moved = true; }
+  avatar.style.left = pos.x + 'px'; avatar.style.top = pos.y + 'px';
+  if (moved) { avatar.style.transform = 'scale(1.06)'; setTimeout(() => avatar.style.transform = 'scale(1)', 80); }
+  
+  // move obstacles
+  obstacleEls.forEach(o => {
+    let x = o.el.offsetLeft + o.dx, y = o.el.offsetTop + o.dy;
+    if (x < 6 || x > GW - o.el.offsetWidth - 6) { o.dx = -o.dx; x = Math.max(6, Math.min(GW - o.el.offsetWidth - 6, x)); }
+    if (y < 6 || y > GH - o.el.offsetHeight - 6) { o.dy = -o.dy; y = Math.max(6, Math.min(GH - o.el.offsetHeight - 6, y)); }
+    o.el.style.left = x + 'px'; o.el.style.top = y + 'px';
+  });
+  
+  checkSites();
+  checkObstacles();
+  requestAnimationFrame(gameLoop);
+}
+requestAnimationFrame(gameLoop);
+
+/* Collision helper */
+function overlap(ax, ay, aw, ah, bx, by, bw, bh) { return !(ax + aw < bx || ax > bx + bw || ay + ah < by || ay > by + bh); }
+
+/* Check sites collision */
+function checkSites() {
+  const ax = pos.x, ay = pos.y, aw = avatar.offsetWidth, ah = avatar.offsetHeight;
+  const sites = Array.from(document.querySelectorAll('.site'));
+  for (const el of sites) {
+    const sx = el.offsetLeft, sy = el.offsetTop, sw = el.offsetWidth, sh = el.offsetHeight;
+    if (overlap(ax, ay, aw, ah, sx, sy, sw, sh)) {
+      const key = el.dataset.key;
+      if (!answers[key] && !el.classList.contains('locked')) { openSite(key, el); return; }
+    }
+  }
+}
+
+/* Check obstacles collision (cooldown) */
+function checkObstacles() {
+  const ax = pos.x, ay = pos.y, aw = avatar.offsetWidth, ah = avatar.offsetHeight;
+  const now = Date.now();
+  obstacleEls.forEach(o => {
+    const sx = o.el.offsetLeft, sy = o.el.offsetTop, sw = o.el.offsetWidth, sh = o.el.offsetHeight;
+    if (overlap(ax, ay, aw, ah, sx, sy, sw, sh)) {
+      if (!o.lastHit || now - o.lastHit > 1200) {
+        const pen = parseFloat(o.el.dataset.penalty) || 1;
+        points = Math.max(0, +(points - pen).toFixed(2));
+        updateUI();
+        showToast(`Obstáculo tocado: -${pen} punto(s)`);
+        o.lastHit = now;
+      }
+    }
+  });
+}
+
+/* Small toast */
+function showToast(txt, ms = 1400) { const t = document.createElement('div'); t.style.position = 'fixed'; t.style.left = '50%'; t.style.transform = 'translateX(-50%)'; t.style.bottom = '18px'; t.style.background = 'rgba(0,0,0,0.6)'; t.style.padding = '8px 12px'; t.style.borderRadius = '8px'; t.style.zIndex = '9999'; t.style.color = '#fff'; t.style.transition = 'opacity 0.2s'; t.innerText = txt; document.body.appendChild(t); setTimeout(() => t.style.opacity = '0', ms - 200); setTimeout(() => t.remove(), ms); }
+
+/* Shuffle helper */
+function shuffle(a) { const arr = a.slice(); for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+
+/* Open site (render challenge + start timer) */
+function openSite(key, el) {
+  if (currentKey) return; // block while open
+  currentKey = key;
+  const data = SITES[key];
+  siteName.innerText = data.name;
+  questionEl.innerText = data.q;
+  optionsEl.innerHTML = '';
+  eduEl.innerText = '';
+  
+  // render options by type
+  if (['mcq', 'choose'].includes(data.type)) {
+    const opts = shuffle(data.opts.slice());
+    opts.forEach(opt => {
+      const b = document.createElement('button'); b.textContent = opt;
+      b.addEventListener('click', () => submitAnswer(key, opt, data, el));
+      optionsEl.appendChild(b);
+    });
+  } else if (data.type === 'tf') {
+    const opts = shuffle(['Verdadero', 'Falso']);
+    opts.forEach(v => {
+      const b = document.createElement('button'); b.textContent = v;
+      b.addEventListener('click', () => submitAnswer(key, v === 'Verdadero', data, el));
+      optionsEl.appendChild(b);
+    });
+  } else if (data.type === 'math') {
+    const input = document.createElement('input'); input.type = 'number'; input.placeholder = 'Ingresa el número y presiona Enter';
+    input.style.padding = '8px'; input.style.borderRadius = '6px'; input.style.background = 'transparent'; input.style.color = '#fff'; input.style.border = '1px solid rgba(255,255,255,0.06)';
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') submitAnswer(key, parseFloat(input.value), data, el); });
+    optionsEl.appendChild(input);
+  } else if (data.type === 'open') {
+    const ta = document.createElement('textarea'); ta.placeholder = 'Redacta tu propuesta (breve)'; ta.style.width = '100%'; ta.style.height = '100px'; ta.style.background = 'transparent'; ta.style.color = '#fff'; ta.style.border = '1px solid rgba(255,255,255,0.06)';
+    const btn = document.createElement('button'); btn.textContent = 'Evaluar respuesta'; btn.className = 'btn';
+    btn.style.marginTop = '8px';
+    btn.addEventListener('click', () => submitAnswer(key, ta.value.trim(), data, el));
+    optionsEl.appendChild(ta); optionsEl.appendChild(btn);
+  }
+  
+  eduEl.innerText = '(Resuelve antes de que termine el temporizador)';
+  challenge.classList.remove('hidden');
+  startTimer(data.time || 60, key, el);
+}
+
+/* Timer handling */
+function startTimer(sec, key, el) {
+  clearInterval(timerInterval);
+  timeLeft = sec;
+  timerEl.innerText = `${timeLeft}s`;
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    timerEl.innerText = `${timeLeft}s`;
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      timerEl.innerText = '0s';
+      handleTimeout(key, el);
+    }
+  }, 1000);
+}
+
+/* Timeout */
+function handleTimeout(key, el) {
+  if (!SITES[key]) return;
+  answers[key] = { given: null, correct: false, timedOut: true };
+  points = Math.max(0, +(points - 0.5).toFixed(2));
+  clues.push({ key, clue: SITES[key].clue + ' (No respondida a tiempo)', edu: SITES[key].edu });
+  renderClues();
+  el.classList.add('solved');
+  el.classList.remove('locked');
+  challenge.classList.add('hidden');
+  currentKey = null;
+  updateUI();
+  unlockNext();
+  checkFinish();
+}
+
+/* Submit answer (with partial for open) */
+function submitAnswer(key, answer, data, el) {
+  clearInterval(timerInterval);
+  timerEl.innerText = '—';
+  challenge.classList.add('hidden');
+  let isCorrect = false;
+  let scoreToAdd = 1;
+
+  if (data.type === 'tf') { isCorrect = (answer === data.ans); }
+  else if (data.type === 'math') { if (typeof answer === 'number' && !isNaN(answer)) isCorrect = Math.abs(answer - data.ans) < 0.001; }
+  else if (data.type === 'open') {
+    const text = String(answer || '').toLowerCase();
+    const keysArr = (data.keywords || []).map(k => k.toLowerCase());
+    let matched = 0;
+    keysArr.forEach(k => { if (text.includes(k)) matched++; });
+    scoreToAdd = Math.min(1, matched / Math.max(1, keysArr.length));
+    isCorrect = scoreToAdd >= 0.6;
+  } else { isCorrect = String(answer).trim() === String(data.ans).trim(); }
+
+  answers[key] = { given: answer, correct: isCorrect, timedOut: false };
+  if (isCorrect) correctCount++;
+  points = +(points + scoreToAdd).toFixed(2);
+  clues.push({ key, clue: data.clue, edu: data.edu });
+  renderClues();
+  el.classList.add('solved');
+  el.classList.remove('locked');
+  currentKey = null;
+  updateUI();
+  unlockNext();
+  checkFinish();
+}
+
+/* Unlock next sequential site */
+function unlockNext() {
+  const all = Array.from(document.querySelectorAll('.site'));
+  const next = all.find(s => s.classList.contains('locked'));
+  if (next) next.classList.remove('locked');
+}
+
+/* Update UI */
+function updateUI() {
+  countEl.innerText = `${Object.keys(answers).length} / ${total}`;
+  scoreEl.innerText = points.toFixed(1);
+  bar.style.width = Math.round((Object.keys(answers).length / total) * 100) + '%';
+}
+
+/* Render clues */
+function renderClues() {
+  cluesEl.innerHTML = '';
+  clues.forEach((c, i) => {
+    const d = document.createElement('div'); d.className = 'clue';
+    d.innerHTML = `<strong>${i + 1}.</strong> ${c.clue} <div style="font-size:0.85rem;color:#a7dbe8;margin-top:6px">${c.edu}</div>`;
+    cluesEl.appendChild(d);
+  });
+}
+
+/* Check finish */
+function checkFinish() {
+  if (Object.keys(answers).length === total) {
+    setTimeout(() => { prepareFinal(); finalPanel.classList.remove('hidden'); finalPanel.scrollIntoView({ behavior: 'smooth' }); }, 300);
+  }
+}
+
+/* Prepare final interactive */
+function prepareFinal() {
+  populatePool();
+  prepareTopClues();
+}
+
+/* Populate draggable pool */
+function populatePool() {
+  poolEl.innerHTML = '';
+  document.querySelectorAll('.drop-zone').forEach(z => z.innerHTML = `<div style="font-weight:700;margin-bottom:6px">${z.dataset.cat}</div>`);
+  clues.forEach((c, i) => {
+    const item = document.createElement('div');
+    item.className = 'draggable';
+    item.draggable = true;
+    item.id = 'clue-' + i;
+    item.dataset.idx = i;
+    item.innerText = `${i + 1}. ${c.clue}`;
+    item.addEventListener('dragstart', dragStart);
+    item.addEventListener('dragend', dragEnd);
+    poolEl.appendChild(item);
+  });
+  poolEl.addEventListener('dragover', dragOver);
+  poolEl.addEventListener('drop', dropItem);
+  document.querySelectorAll('.drop-zone').forEach(z => { z.addEventListener('dragover', dragOver); z.addEventListener('drop', dropItem); z.addEventListener('dragleave', dragLeave); });
+}
+
+/* Drag & drop */
+function dragStart(e) { e.dataTransfer.setData('text/plain', e.target.id); e.target.style.opacity = '0.6'; }
+function dragEnd(e) { e.target.style.opacity = '1'; }
+function dragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drop-over'); }
+function dragLeave(e) { e.currentTarget.classList.remove('drop-over'); }
+function dropItem(e) { e.preventDefault(); e.currentTarget.classList.remove('drop-over'); const id = e.dataTransfer.getData('text/plain'); const item = document.getElementById(id); if (!item) return; e.currentTarget.appendChild(item); const cat = e.currentTarget.dataset.cat || ''; item.dataset.category = cat; }
+
+/* Top clues (max 3) */
+function prepareTopClues() {
+  topCluesContainer.innerHTML = '';
+  clues.forEach((c, i) => {
+    const id = 'chk' + i;
+    const div = document.createElement('div');
+    div.innerHTML = `<label style="display:block"><input type="checkbox" id="${id}" data-idx="${i}"> <span style="margin-left:8px">${i + 1}. ${c.clue}</span></label>`;
+    topCluesContainer.appendChild(div);
+    document.getElementById(id).addEventListener('change', () => {
+      const checked = Array.from(topCluesContainer.querySelectorAll('input[type=checkbox]:checked'));
+      if (checked.length > 3) { document.getElementById(id).checked = false; showToast('Máximo 3 pistas críticas'); }
+    });
+  });
+}
+
+/* Auto detect mainRisk from classification */
+function autoDetectMainRisk() {
+  const ids = ['cat-water', 'cat-waste', 'cat-animal', 'cat-food'];
+  let counts = {};
+  ids.forEach(id => { const el = document.getElementById(id); counts[el.dataset.cat || id] = el.querySelectorAll('.draggable').length; });
+  let best = '', max = 0;
+  for (const k in counts) if (counts[k] > max) { max = counts[k]; best = k; }
+  return best || '';
+}
+
+/* Generate draft */
+btnGen.addEventListener('click', () => {
+  let mainRisk = mainRiskSel.value || autoDetectMainRisk() || 'No especificado';
+  let disease = relatedDiseaseSel.value || 'No claro';
+  
+  const allClassified = {};
+  document.querySelectorAll('.diag-column.drop-zone').forEach(z => {
+    const cat = z.dataset.cat;
+    allClassified[cat] = Array.from(z.querySelectorAll('.draggable')).map(el => el.innerText);
+  });
+  
+  const classifiedText = Object.keys(allClassified).filter(cat => allClassified[cat].length > 0)
+    .map(cat => `\n--- ${cat} ---\n` + allClassified[cat].join('\n'))
+    .join('\n');
+    
+  const checkedClues = Array.from(topCluesContainer.querySelectorAll('input[type=checkbox]:checked'));
+  const selClues = checkedClues.length > 0
+    ? checkedClues.slice(0, 3).map(ch => {
+      const i = parseInt(ch.dataset.idx, 10);
+      return `${i + 1}. ${clues[i] ? clues[i].clue : ''}`;
+    })
+    : ['No se han seleccionado pistas críticas.'];
+
+  const draft = `
+DIAGNÓSTICO PRELIMINAR
+
+1. Factores de riesgo principales:
+   - Factor detectado: ${mainRisk}
+   - Enfermedad relacionada: ${disease}
+
+2. Pistas de observación (Evidencia crítica):
+   - ${selClues.join('\n   - ')}
+
+3. Evidencia clasificada:
+${classifiedText}
+
+4. Análisis general:
+   (Elabora aquí un resumen)
+`;
+  draftEl.value = draft.trim();
+});
+
+/* Reset diagnosis */
+btnResetDiag.addEventListener('click', () => {
+  if (confirm('¿Estás seguro de que quieres reiniciar la clasificación? Se perderán todos los datos arrastrados.')) {
+    populatePool();
+    mainRiskSel.value = '';
+    relatedDiseaseSel.value = '';
+    draftEl.value = '';
+    solutionEl.value = '';
+    
+    // Clear checkboxes for top clues
+    Array.from(topCluesContainer.querySelectorAll('input[type=checkbox]:checked')).forEach(ch => ch.checked = false);
+  }
+});
+
+/* Reset all */
+btnResetAll.addEventListener('click', () => {
+  if (confirm('¿Estás seguro de que quieres reiniciar el juego? Se perderán todos los datos.')) {
+    window.location.reload();
+  }
+});
+
+/* Export to PDF */
+btnExport.addEventListener('click', () => {
+  const doc = new window.jspdf.jsPDF();
+  const margin = 14;
+  let y = 22;
+
+  doc.setFontSize(18);
+  doc.text("Informe de Investigación en Las Acacias", margin, y);
+  y += 10;
+  doc.setFontSize(12);
+  doc.text(`Puntaje final: ${points.toFixed(1)} de ${total}`, margin, y);
+  y += 20;
+
+  const draftText = draftEl.value || 'No se ha generado un borrador.';
+  const solutionText = solutionEl.value || 'No se ha propuesto una solución.';
+  
+  doc.text("Diagnóstico:", margin, y);
+  y += 10;
+  const draftLines = doc.splitTextToSize(draftText, 180);
+  doc.text(draftLines, margin, y);
+  y += doc.getTextDimensions(draftText, { maxWidth: 180 }).h + 10;
+  
+  doc.text("Solución propuesta:", margin, y);
+  y += 10;
+  const solutionLines = doc.splitTextToSize(solutionText, 180);
+  doc.text(solutionLines, margin, y);
+  
+  doc.save("Informe_Las_Acacias.pdf");
+});
+</script>
+</body>
+</html>
+
+
+
+
+
+

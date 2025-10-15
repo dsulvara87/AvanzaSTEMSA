@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Jumanji Didáctico: 30 Retos y Registro de KP</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IM+Fell+English+SC&display=swap" rel="stylesheet">
+
+<style>
+/* 1. Variables y Paleta de Colores (Jungla y Madera Antigua) */
+:root {
+    --bg-dark: #1e3a2e; /* Verde Oscuro Profundo (Jungla) */
+    --bg-light: #4a6c4b; /* Verde Olivo (Fondo Secundario) */
+    --wood-dark: #5c4033; /* Marrón Oscuro (Madera) */
+    --parchment: #f0e6c7; /* Pergamino Antiguo */
+    --text-dark: #333333; /* Tinta sobre pergamino */
+    --muted: #795d4f; /* Texto secundario en el pergamino */
+    --accent-gold: #d4af37; /* Oro Antiguo */
+    --success: #38a169; /* Éxito (Verde Brillo) */
+    --danger: #9a3412; /* Peligro (Rojo Ladrillo) */
+}
+* {
+    box-sizing: border-box;
+}
+body {
+    font-family: 'Cinzel', serif;
+    margin: 0;
+    background: linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-light) 100%);
+    color: var(--parchment);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* 2. Estilo de Encabezado y Título */
+header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+header h1 {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 3.5rem;
+    color: var(--accent-gold);
+    text-shadow: 0 0 10px rgba(212, 175, 55, 0.7);
+    border-bottom: 4px double var(--accent-gold);
+    padding-bottom: 10px;
+    margin: 0 auto;
+    max-width: 900px;
+}
+
+/* 3. Contenedores Principales (El Tablero de Madera) */
+.container {
+    max-width: 1200px; 
+    margin: 0 auto;
+    background: var(--wood-dark);
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.8), inset 0 0 15px rgba(0, 0, 0, 0.5);
+    border: 5px solid var(--accent-gold);
+}
+.grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr; 
+    gap: 30px;
+}
+@media (max-width: 980px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+    .right-panel {
+        order: -1; 
+    }
+}
+
+/* 4. Estilo de Fichas (Avatares y Hojas de Personaje) */
+.card {
+    background: var(--parchment);
+    color: var(--text-dark);
+    padding: 20px;
+    border-radius: 4px;
+    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.4);
+    margin-bottom: 20px;
+    border: 2px solid var(--wood-dark);
+}
+.char-stat {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--wood-dark);
+    font-weight: 700;
+}
+.stat-value {
+    color: var(--danger);
+}
+#avatar-select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    font-family: 'Cinzel', serif;
+}
+.avatar-desc {
+    font-size: 0.9rem;
+    color: var(--muted);
+    font-style: italic;
+    margin-top: 5px;
+}
+
+/* 5. Botones y Controles */
+.btn {
+    width: 100%;
+    padding: 15px 20px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    background: var(--danger); 
+    color: white;
+    box-shadow: 0 4px 0 var(--wood-dark);
+    transition: all 0.1s;
+}
+.btn:active {
+    transform: translateY(4px);
+    box-shadow: none;
+}
+
+/* 6. Área de Desafío y Resultado (La Carta de la Jungla) */
+#card-display {
+    min-height: 150px;
+    text-align: left; 
+    margin-top: 20px;
+    padding: 20px;
+    background: var(--bg-light);
+    color: var(--parchment);
+    border: 3px double var(--accent-gold);
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.7);
+    border-radius: 4px;
+}
+#card-display h3 {
+    color: var(--accent-gold);
+    margin-top: 0;
+    font-size: 1.5rem;
+    text-align: center;
+}
+#problem-statement {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--parchment);
+    padding: 10px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 2px;
+}
+#student-solution {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    font-family: 'Cinzel', serif;
+    color: var(--text-dark);
+}
+.result.success {
+    background: var(--success);
+    color: var(--wood-dark);
+}
+.result.failure {
+    background: var(--danger);
+    color: white;
+}
+#stat-kp {
+    font-size: 1.1rem;
+    color: var(--accent-gold) !important;
+}
+
+/* Estilos para el nuevo cuadro de registro de KP */
+#score-summary h3 {
+    color: var(--accent-gold);
+    font-size: 1.3rem;
+}
+#kp-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-family: 'Inter', sans-serif;
+}
+#kp-table th, #kp-table td {
+    border: 1px solid var(--wood-dark);
+    padding: 10px;
+    text-align: center;
+}
+#kp-table th {
+    background-color: var(--wood-dark);
+    color: var(--parchment);
+}
+#kp-table td {
+    background-color: #ffe;
+    color: var(--text-dark);
+    font-weight: 700;
+}
+</style>
+</head>
+<body>
+<header>
+    <h1>JUMANJI DIDÁCTICO: 30 RETOS Y REGISTRO DE KP</h1>
+    <p style="font-size:1.2rem; margin-top:-10px; color:var(--accent-gold)">¡Resuelve el código matemático o la jungla te consumirá!</p>
+</header>
+
+<div class="container">
+    <div id="char-selection">
+        <div class="card">
+            <h2>1. Elige tu Especialista de 9° Grado</h2>
+            <select id="avatar-select">
+                <option value="" disabled selected>-- Elige tu Especialista --</option>
+                <option value="algebrist">El Algebrista (Álgebra)</option>
+                <option value="geometer">La Geómetra (Geometría)</option>
+                <option value="statistician">El Estadístico (Estadística)</option>
+            </select>
+            <p id="avatar-desc" class="avatar-desc">Selecciona un avatar para ver sus fortalezas.</p>
+            <button class="btn" id="confirm-avatar">Comenzar la Expedición</button>
+        </div>
+    </div>
+
+    <div id="game-board" class="grid" style="display:none;">
+        <div id="left-column">
+            <div class="card" id="char-sheet">
+                <h2 id="char-name">Hoja de Matemático</h2>
+                <div class="char-stat"><span>Álgebra (Alg)</span> <span id="stat-alg" class="stat-value">0</span></div>
+                <div class="char-stat"><span>Geometría (Geo)</span> <span id="stat-geo" class="stat-value">0</span></div>
+                <div class="char-stat"><span>Estadística (Est)</span> <span id="stat-est" class="stat-value">0</span></div>
+                <div class="char-stat" style="border-top: 2px solid var(--wood-dark);">
+                    <span>**PUNTOS DE CONOCIMIENTO TOTAL (KP)**</span> 
+                    <span id="stat-kp" class="stat-value">0</span>
+                </div>
+                <div class="char-stat"><span>Puntos de Enfoque (Vidas)</span> <span id="stat-lives" class="stat-value" style="color: var(--success);">3</span></div>
+            </div>
+
+            <div class="card" id="score-summary">
+                <h3>Registro de KP por Habilidad</h3>
+                <table id="kp-table">
+                    <thead>
+                        <tr>
+                            <th>Álgebra</th>
+                            <th>Geometría</th>
+                            <th>Estadística</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr id="kp-scores">
+                            <td id="kp-alg">0</td>
+                            <td id="kp-geo">0</td>
+                            <td id="kp-est">0</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+
+            <div id="challenge-area">
+                <h2>2. La Carta de Desafío de 9° Grado</h2>
+                <div id="card-display">
+                    <h3>Esperando el primer lanzamiento...</h3>
+                    <p style="text-align:center;">Usa el botón "Lanzar los Dados" para que Jumanji revele el próximo reto de 9° Grado.</p>
+                </div>
+            </div>
+             <button class="btn" id="roll-dice">LANZAR LOS DADOS (VERIFICAR SOLUCIÓN)</button>
+             <p style="color:var(--accent-gold); text-align:center; font-size:0.9rem; margin-top:10px;">* La tirada valida tu dominio del tema. La exactitud de la respuesta es clave.</p>
+        </div>
+        
+        <aside class="right-panel">
+            <div class="card didactic-card">
+                <h3>Guía del Gremio Didáctico (Unidad de 9°)</h3>
+                <hr style="border-top: 1px solid var(--muted);">
+                <h4>Unidad: Álgebra, Geometría y Estadística (Grado 9)</h4>
+                <p><strong>Objetivo Didáctico:</strong> Utilizar las herramientas matemáticas para resolver situaciones contextuales de Noveno Grado.</p>
+                <h4>Temas a Desarrollar:</h4>
+                <ul class="didactic-list">
+                    <li>Álgebra: Ecuaciones, Sistemas, Factorización.</li>
+                    <li>Geometría: Pitágoras, Área, Volumen, Ángulos.</li>
+                    <li>Estadística: Probabilidad, Medidas de Tendencia Central.</li>
+                </ul>
+                <p style="font-size:0.85rem; color:var(--danger)">**Regla de la Jungla:** Acertar la respuesta **suma 1 KP**. Fallar solo te hace perder 1 Punto de Enfoque (Vida).</p>
+            </div>
+        </aside>
+    </div>
+</div>
+
+<script>
+// Definición de Avatares
+const AVATARS = {
+    algebrist: { name: "El Algebrista", desc: "Experto en modelar y despejar ecuaciones complejas.", stats: { alg: 5, geo: 3, est: 4 } },
+    geometer: { name: "La Geómetra", desc: "Maestra de las formas y el espacio. Domina las propiedades de figuras.", stats: { alg: 4, geo: 5, est: 3 } },
+    statistician: { name: "El Estadístico", desc: "Domina el análisis de datos, probabilidad y tendencias.", stats: { alg: 3, geo: 4, est: 5 } }
+};
+
+// 30 DESAFÍOS DE 9° GRADO (10 por habilidad)
+const CHALLENGES = [
+    // --- ÁLGEBRA (10) ---
+    { text: "Resuelva la ecuación simple: 3x + 5 = 20. Escriba solo el valor entero de x.", skill: "alg", difficulty: 6, answer: ["5"], fail_message: "El despeje algebraico es incorrecto." },
+    { text: "Resuelva la ecuación: x² - 4 = 0. Escriba las dos soluciones separadas por 'o' (Ej: 2o-2).", skill: "alg", difficulty: 8, answer: ["2o-2", "-2o2"], fail_message: "Falla en el código cuadrático." },
+    { text: "Factorice la diferencia de cuadrados: 4a² - 9. Escriba la respuesta sin espacios (Ej: (2a+3)(2a-3)).", skill: "alg", difficulty: 9, answer: ["(2a+3)(2a-3)", "(2a-3)(2a+3)"], fail_message: "La factorización no es válida." },
+    { text: "Simplifique la expresión: 2x + 3y - x + y. Escriba la respuesta sin espacios (Ej: x+4y).", skill: "alg", difficulty: 7, answer: ["x+4y"], fail_message: "Error al combinar términos semejantes." },
+    { text: "Resuelva la inecuación: 2x - 1 < 5. Escriba solo el valor máximo entero de x.", skill: "alg", difficulty: 8, answer: ["2"], fail_message: "El límite de la inecuación es incorrecto." },
+    { text: "Cuál es la pendiente de la recta: y = 5x - 3? Escriba solo el número entero.", skill: "alg", difficulty: 6, answer: ["5"], fail_message: "La pendiente no es detectada." },
+    { text: "Si un número más su doble suman 18, ¿cuál es el número? Escriba solo el número entero.", skill: "alg", difficulty: 7, answer: ["6"], fail_message: "El planteamiento del problema es fallido." },
+    { text: "Resuelva la ecuación: (x+1)² = 9. Escriba las dos soluciones separadas por 'o'.", skill: "alg", difficulty: 9, answer: ["2o-4", "-4o2"], fail_message: "Las raíces son erróneas." },
+    { text: "Simplifique la potencia: (x³) / x². Escriba la potencia resultante (Ej: x4).", skill: "alg", difficulty: 8, answer: ["x4"], fail_message: "Error en las leyes de exponentes." },
+    { text: "Si x = 4, ¿cuál es el valor de la expresión: 3x - 5? Escriba solo el número entero.", skill: "alg", difficulty: 6, answer: ["7"], fail_message: "El valor numérico es incorrecto." },
+
+    // --- GEOMETRÍA (10) ---
+    { text: "Calcula el área de un círculo con radio de 10. Use π ≈ 3.14. Escriba el valor numérico con dos decimales (Ej: 314.00).", skill: "geo", difficulty: 8, answer: ["314.00"], fail_message: "El cálculo del área del círculo es incorrecto." },
+    { text: "Calcula el perímetro de un cuadrado con lado de 6 cm. Escriba solo el número entero.", skill: "geo", difficulty: 6, answer: ["24"], fail_message: "El perímetro es incorrecto." },
+    { text: "Si un ángulo de un triángulo es 30° y otro es 70°, ¿cuánto mide el tercer ángulo? Escriba solo el número entero.", skill: "geo", difficulty: 7, answer: ["80"], fail_message: "La suma de ángulos es incorrecta." },
+    { text: "Calcula el volumen de un cubo cuyo lado mide 5 m. Escriba solo el número entero.", skill: "geo", difficulty: 7, answer: ["125"], fail_message: "El volumen es incorrecto." },
+    { text: "Los lados de un triángulo miden 5, 12 y 13. ¿Es un triángulo rectángulo? Escriba Si o No.", skill: "geo", difficulty: 8, answer: ["si"], fail_message: "Falla el teorema de Pitágoras." },
+    { text: "¿Cuántos grados suman los ángulos interiores de un cuadrilátero? Escriba solo el número entero.", skill: "geo", difficulty: 6, answer: ["360"], fail_message: "Falla la suma de ángulos de polígonos." },
+    { text: "Calcula la longitud de la diagonal de un rectángulo de 3 cm por 4 cm. Escriba solo el número entero.", skill: "geo", difficulty: 7, answer: ["5"], fail_message: "El cálculo de la diagonal es incorrecto." },
+    { text: "El área de un rectángulo es 40 cm². Si el ancho es 5 cm, ¿cuánto mide el largo? Escriba solo el número entero.", skill: "geo", difficulty: 6, answer: ["8"], fail_message: "El área y los lados no concuerdan." },
+    { text: "Calcula el área de un triángulo de base 10 cm y altura 7 cm. Escriba solo el número entero.", skill: "geo", difficulty: 7, answer: ["35"], fail_message: "El área del triángulo es incorrecta." },
+    { text: "Si dos rectas paralelas son cortadas por una transversal, ¿cuánto suman los ángulos consecutivos internos? Escriba solo el número entero.", skill: "geo", difficulty: 8, answer: ["180"], fail_message: "Error en ángulos entre paralelas." },
+
+    // --- ESTADÍSTICA (10) ---
+    { text: "¿Cuál es la Mediana del siguiente conjunto de datos: 5, 8, 1, 10, 4? Escriba solo el número entero.", skill: "est", difficulty: 7, answer: ["5"], fail_message: "Falla en la Mediana." },
+    { text: "¿Cuál es la Media (promedio) de 10, 20 y 30? Escriba solo el número entero.", skill: "est", difficulty: 6, answer: ["20"], fail_message: "El promedio es incorrecto." },
+    { text: "¿Cuál es el Rango del conjunto de datos: 1, 15, 8, 4? Escriba solo el número entero.", skill: "est", difficulty: 7, answer: ["14"], fail_message: "El rango es incorrecto." },
+    { text: "Si hay 3 camisetas rojas y 2 azules, ¿cuál es la probabilidad (fracción) de sacar una azul? (Ej: 2/5).", skill: "est", difficulty: 7, answer: ["2/5"], fail_message: "El cálculo de probabilidad es incorrecto." },
+    { text: "Al lanzar dos dados, ¿cuál es la probabilidad de que la suma sea 12? (Fracción: 1/36).", skill: "est", difficulty: 9, answer: ["1/36"], fail_message: "La probabilidad compuesta es incorrecta." },
+    { text: "¿Cuál es la Moda del conjunto: 2, 5, 5, 8, 2, 5? Escriba solo el número entero.", skill: "est", difficulty: 6, answer: ["5"], fail_message: "La moda es incorrecta." },
+    { text: "Si la probabilidad de lluvia es 0.6, ¿cuál es la probabilidad de que NO llueva? (Decimal con un decimal).", skill: "est", difficulty: 6, answer: ["0.4"], fail_message: "Falla la probabilidad complementaria." },
+    { text: "En una clase de 20, 15 son niñas. ¿Cuál es el porcentaje de niños? (Escriba solo el número entero: Ej: 25).", skill: "est", difficulty: 7, answer: ["25"], fail_message: "El cálculo de porcentaje es incorrecto." },
+    { text: "¿Cuál es la Mediana de 1, 2, 3, 4? (Decimal con un decimal).", skill: "est", difficulty: 8, answer: ["2.5"], fail_message: "La Mediana en datos pares es incorrecta." },
+    { text: "¿Cuál es el valor más grande en el conjunto de datos 7, 12, 5, 12, 10? Escriba solo el número entero.", skill: "est", difficulty: 6, answer: ["12"], fail_message: "El máximo del conjunto es incorrecto." }
+];
+
+let player = {
+    avatar: null,
+    name: "N/A",
+    stats: { alg: 0, geo: 0, est: 0 },
+    lives: 3,
+    kp: 0,
+    skill_kp: { alg: 0, geo: 0, est: 0 } // Puntos por habilidad
+};
+
+let currentChallenge = null;
+
+// Función de limpieza: Elimina espacios, unidades comunes y convierte a minúsculas, reemplaza comas por puntos.
+const cleanInput = (s) => s.toLowerCase().replace(/(\s|cm|m|\(|\))/g, '').replace(/,/g, '.');
+
+
+// --- FUNCIONES DE JUEGO PRINCIPAL ---
+
+function rollDiceAndDrawCard() {
+    if (player.lives <= 0) {
+        displayCard("EXPEDICIÓN FALLIDA", `¡FIN DEL JUEGO! Has perdido todo tu Enfoque. Tu puntuación final es: **${player.kp} Puntos de Conocimiento (KP)**.`, 'failure');
+        document.getElementById('roll-dice').disabled = true;
+        return;
+    }
+    
+    if (!currentChallenge) {
+        // Selecciona un nuevo reto (sin repetir, idealmente, pero la lógica actual permite repetición)
+        currentChallenge = CHALLENGES[Math.floor(Math.random() * CHALLENGES.length)];
+        renderChallenge();
+        return;
+    }
+
+    // 1. Obtener solución del estudiante y limpiar
+    const studentSolution = document.getElementById('student-solution').value.trim();
+    if (studentSolution === "") {
+        alert("¡Alto! Debes escribir tu solución matemática antes de verificarla con los dados.");
+        return;
+    }
+    
+    // 2. Verificación de exactitud
+    const studentCleaned = cleanInput(studentSolution);
+    const cleanExpected = currentChallenge.answer.map(cleanInput);
+    const isSolutionExact = cleanExpected.includes(studentCleaned);
+    
+    // 3. Tirar el dado (D6)
+    const d6Roll = Math.floor(Math.random() * 6) + 1;
+
+    // 4. Obtener habilidad requerida y su valor
+    const skillName = currentChallenge.skill;
+    const skillValue = player.stats[skillName];
+    const skillText = skillName === 'alg' ? 'Álgebra' : skillName === 'geo' ? 'Geometría' : 'Estadística';
+
+    // 5. Calcular el Resultado
+    const totalScore = d6Roll + skillValue;
+    const success = isSolutionExact && totalScore >= currentChallenge.difficulty;
+    
+    let resultMessage;
+    let resultExplanation = "";
+
+    if (success) {
+        // Aumenta el puntaje total y por habilidad
+        player.kp++; 
+        player.skill_kp[skillName]++; 
+        updateKP();
+        updateScoreTable();
+        resultExplanation = `El dado (${d6Roll}) + tu habilidad en ${skillText} (${skillValue}) supera la dificultad.`;
+        resultMessage = `<div class="result success">✅ ¡CÓDIGO DESCIFRADO! Superaste el reto de ${skillText}. **GANAS +1 KP (Total: ${player.kp})**</div>`;
+    } else {
+        // Solo pierdes vida, no se resta KP
+        player.lives--;
+        updateLives();
+        
+        let reason = "";
+        if (!isSolutionExact) {
+            reason = `Tu planteamiento matemático fue **INCORRECTO** (Esperado: ${currentChallenge.answer.join(" o ")}).`;
+        } else {
+            reason = `Tu dominio de ${skillText} (${totalScore} total) no fue suficiente contra la Dificultad del Enigma (${currentChallenge.difficulty}).`;
+        }
+
+        if (player.lives <= 0) {
+            resultMessage = `<div class="result failure">❌ ¡ERROR FATAL! ${currentChallenge.fail_message}. ${reason} HAS PERDIDO TU ÚLTIMO ENFOQUE. **Puntuación Final: ${player.kp} KP.**</div>`;
+        } else {
+            resultMessage = `<div class="result failure">❌ ¡ERROR! ${currentChallenge.fail_message}. ${reason} Puntos de Enfoque restantes: ${player.lives}.</div>`;
+        }
+    }
+
+    // 6. Mostrar el Resultado y preparar el siguiente turno
+    const cardContent = `
+        <p id="problem-statement">Problema Resuelto: ${currentChallenge.text}</p>
+        <p style="text-align:center; font-weight:700;">Tu Respuesta: <span style="color:var(--danger)">${studentSolution}</span></p>
+        <p style="text-align:center; font-weight:700;">Respuesta Esperada: <span style="color:var(--success)">${currentChallenge.answer.join(" o ")}</span></p>
+        <hr style="border-top:1px dashed var(--muted)">
+        <p class="roll-info">Habilidad Requerida: ${skillText} (${skillValue})</p>
+        <p class="roll-info">Tirada del Dado (D6): ${d6Roll}</p>
+        <p class="roll-info">Puntuación de Éxito: ${totalScore} (Dificultad: ${currentChallenge.difficulty})</p>
+        <p class="roll-info">${resultExplanation}</p>
+        ${resultMessage}
+    `;
+    displayCard("Resultado del Enigma", cardContent, success ? 'success' : 'failure');
+
+    if (player.lives > 0) {
+         document.getElementById('roll-dice').innerText = "LANZAR LOS DADOS (NUEVO RETO)";
+    }
+    
+    currentChallenge = null;
+    document.getElementById('roll-dice').removeEventListener('click', verifySolution);
+    document.getElementById('roll-dice').addEventListener('click', rollDiceAndDrawCard);
+    
+    if (player.lives <= 0) {
+        document.getElementById('roll-dice').disabled = true;
+    }
+}
+
+function renderChallenge() {
+    const skillText = currentChallenge.skill === 'alg' ? 'Álgebra' : currentChallenge.skill === 'geo' ? 'Geometría' : 'Estadística';
+    const cardContent = `
+        <h3>RETO DE ${skillText.toUpperCase()} - DIFICULTAD: ${currentChallenge.difficulty}</h3>
+        <p id="problem-statement">${currentChallenge.text}</p>
+        <p style="color:var(--text-dark); margin-top:15px;">Paso 1: Resuelve el problema en tu cuaderno.</p>
+        <label for="student-solution">Paso 2: Escribe aquí la respuesta final (¡respeta el formato!):</label>
+        <input id="student-solution" type="text" placeholder="Ej: 15 o 3/10" />
+        <p style="color:var(--text-dark); margin-top:15px;">Paso 3: ¡Lanza los dados para verificar tu dominio del tema!</p>
+    `;
+    displayCard("Carta de Desafío de 9° Grado", cardContent, 'accent-gold');
+    document.getElementById('roll-dice').innerText = "VERIFICAR SOLUCIÓN CON DADOS";
+    
+    document.getElementById('roll-dice').removeEventListener('click', rollDiceAndDrawCard);
+    document.getElementById('roll-dice').addEventListener('click', verifySolution);
+}
+
+function verifySolution() {
+    rollDiceAndDrawCard();
+}
+
+
+// --- FUNCIONES DE INTERFAZ DE USUARIO ---
+
+function updateLives() {
+    document.getElementById('stat-lives').innerText = player.lives;
+    document.getElementById('stat-lives').style.color = player.lives > 1 ? 'var(--success)' : 'var(--danger)';
+}
+
+function updateKP() {
+    document.getElementById('stat-kp').innerText = player.kp;
+}
+
+function updateScoreTable() {
+    document.getElementById('kp-alg').innerText = player.skill_kp.alg;
+    document.getElementById('kp-geo').innerText = player.skill_kp.geo;
+    document.getElementById('kp-est').innerText = player.skill_kp.est;
+}
+
+function updateCharacterSheet() {
+    document.getElementById('char-name').innerText = player.name;
+    document.getElementById('stat-alg').innerText = player.stats.alg;
+    document.getElementById('stat-geo').innerText = player.stats.geo;
+    document.getElementById('stat-est').innerText = player.stats.est;
+    updateLives();
+    updateKP(); 
+    updateScoreTable(); 
+}
+
+function displayCard(title, content, resultType) {
+    const cardDisplay = document.getElementById('card-display');
+    cardDisplay.innerHTML = `<h3>${title}</h3><div style="font-family: 'Inter', sans-serif;">${content}</div>`;
+    cardDisplay.style.borderColor = resultType === 'success' ? 'var(--success)' : resultType === 'failure' ? 'var(--danger)' : 'var(--accent-gold)';
+}
+
+// --- MANEJO DE EVENTOS ---
+
+document.getElementById('avatar-select').addEventListener('change', (e) => {
+    const selectedValue = e.target.value;
+    const descEl = document.getElementById('avatar-desc');
+    if (selectedValue && AVATARS[selectedValue]) {
+        descEl.innerText = AVATARS[selectedValue].desc;
+        descEl.style.color = 'var(--text-dark)';
+    } else {
+        descEl.innerText = 'Selecciona un avatar para ver sus fortalezas.';
+        descEl.style.color = 'var(--muted)';
+    }
+});
+
+
+document.getElementById('confirm-avatar').addEventListener('click', () => {
+    const selectedValue = document.getElementById('avatar-select').value;
+    if (!selectedValue) {
+        alert("Por favor, selecciona un Especialista para iniciar la Expedición.");
+        return;
+    }
+
+    const avatarData = AVATARS[selectedValue];
+
+    // Reiniciar y configurar el jugador
+    player.avatar = selectedValue;
+    player.name = avatarData.name;
+    player.stats = { ...avatarData.stats };
+    player.lives = 3; 
+    player.kp = 0; 
+    player.skill_kp = { alg: 0, geo: 0, est: 0 }; // Reiniciar KP por habilidad
+
+    // Actualizar la interfaz y mostrar el tablero
+    updateCharacterSheet();
+    document.getElementById('char-selection').style.display = 'none';
+    document.getElementById('game-board').style.display = 'grid';
+    document.getElementById('roll-dice').disabled = false;
+    document.getElementById('roll-dice').innerText = "LANZAR LOS DADOS (NUEVO RETO)";
+    
+    displayCard("¡Bienvenido al Enigma de 9°!", `Eres ${player.name}. Tu misión es resolver 30 códigos matemáticos. Tienes 3 Puntos de Enfoque. **Presiona el botón** para recibir el primer desafío.`, 'accent-gold');
+    
+    document.getElementById('roll-dice').removeEventListener('click', verifySolution);
+    document.getElementById('roll-dice').addEventListener('click', rollDiceAndDrawCard);
+});
+
+document.getElementById('roll-dice').addEventListener('click', rollDiceAndDrawCard);
+document.getElementById('roll-dice').disabled = true; 
+
+</script>
+</body>
+</html>

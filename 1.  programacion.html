@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Apagando incendios con drones AvanzaStem</title>
+  <style>
+    body {
+      display: grid;
+      grid-template-columns: 340px auto 380px;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #eef7fb;
+      height: 100vh;
+    }
+    #panel, #panelSTEM {
+      background: #ffffff;
+      padding: 15px;
+      overflow-y: auto;
+      border-left: 3px solid #0077b6;
+      border-right: 3px solid #0077b6;
+    }
+    #board-container {
+      display: grid;
+      grid-template-columns: 40px auto;
+      grid-template-rows: 40px auto;
+    }
+    #col-labels, #row-labels {
+      display: grid;
+      align-items: center;
+      justify-items: center;
+      background: #ade8f4;
+      font-weight: bold;
+    }
+    #workspace {
+      display: grid;
+      border: 3px solid #0077b6;
+      background: #caf0f8;
+    }
+    .cell {
+      border: 1px solid #ccc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    .cell:nth-child(even) { background: #f1f9ff; }
+    .dron { color: #495057; }
+    .lake { color: #0077b6; }
+    .fire { color: #d00000; }
+    .apagado { color: #6c757d; }
+    .block {
+      padding: 8px;
+      margin: 5px;
+      background: #48cae4;
+      color: #000;
+      text-align: center;
+      cursor: grab;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+    #program {
+      min-height: 200px;
+      border: 2px dashed #aaa;
+      margin-top: 10px;
+      padding: 10px;
+      background: #fff;
+    }
+    #status { margin-top: 10px; font-weight: bold; }
+    #battery-container {
+      width: 100%; height: 20px; background: #ccc;
+      border-radius: 5px; margin-top: 10px; overflow: hidden;
+    }
+    #battery-bar {
+      height: 100%; width: 100%; background: green;
+      transition: width 0.5s linear, background 0.5s linear;
+    }
+    #vidas {
+      margin-top: 10px;
+      font-weight: bold;
+      color: #d00000;
+    }
+    button {
+      margin: 5px 2px; padding: 5px 10px;
+      border: none; border-radius: 5px; cursor: pointer;
+      font-weight: bold;
+    }
+    .btn-del { background: #d00000; color: white; }
+    .btn-clear { background: #ff8800; color: white; }
+    .btn-run { background: #007f5f; color: white; }
+    .btn-reset { background: #023e8a; color: white; }
+    h3, h4 { color: #023e8a; }
+    #menuSTEM button {
+      width: 100%;
+      margin: 5px 0;
+      background: #0096c7;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #menuSTEM button:hover {
+      background: #023e8a;
+    }
+    #contenidoSTEM {
+      margin-top: 15px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 14px;
+      text-align: justify;
+    }
+    #explicacionSimulador {
+      background: #e9f5ff;
+      border: 2px solid #0077b6;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 15px;
+      font-size: 14px;
+      text-align: justify;
+    }
+  </style>
+</head>
+<body>
+  <!-- Panel izquierdo -->
+  <div id="panel">
+    <h2>🚁 Apagando incendios con drones AvanzaStem</h2>
+    <h3>Bloques</h3>
+    <div class="block" draggable="true">Iniciar programa</div>
+    <div class="block" draggable="true">Avanzar</div>
+    <div class="block" draggable="true">Subir</div>
+    <div class="block" draggable="true">Bajar</div>
+    <div class="block" draggable="true">Girar derecha</div>
+    <div class="block" draggable="true">Girar izquierda</div>
+    <div class="block" draggable="true">Recoger agua</div>
+    <div class="block" draggable="true">Descargar agua</div>
+    <div class="block" draggable="true">Repetir</div>
+    <div class="block" draggable="true">Si hay fuego</div>
+
+    
+    <button class="btn-run" onclick="runProgram()">▶ Ejecutar</button>
+    <button class="btn-del" onclick="deleteLastBlock()">🗑 Borrar último</button>
+    <button class="btn-clear" onclick="clearProgram()">🧹 Borrar todo</button>
+    <button class="btn-reset" onclick="reiniciarTablero()">🔄 Reiniciar tablero</button>
+
+    <div id="program" ondragover="event.preventDefault()" ondrop="drop(event)">
+      Arrastra aquí tus bloques
+    </div>
+
+    <div id="status">Incendios apagados: 0</div>
+    <div id="battery-container">
+      <div id="battery-bar"></div>
+    </div>
+    <div id="vidas">Baterías restantes: 3 | Baterías agotadas: 0</div>
+
+    <h3>⚙️ Niveles</h3>
+    <select id="levelSelect" onchange="generateGrid()">
+      <option value="1">Nivel 1 (8x8)</option>
+      <option value="2" selected>Nivel 2 (10x10)</option>
+      <option value="3">Nivel 3 (12x12)</option>
+    </select>
+  </div>
+
+  <!-- Tablero central -->
+  <div id="board-container">
+    <div></div>
+    <div id="col-labels"></div>
+    <div id="row-labels"></div>
+    <div id="workspace"></div>
+  </div>
+
+  <!-- Panel derecho -->
+  <div id="panelSTEM">
+    <h2>ℹ️ Explicación del simulador</h2>
+    <div id="explicacionSimulador">
+      Este simulador te permite programar un <b>dron virtual</b> para apagar incendios
+      en los cerros orientales.  
+      <ul>
+        <li>El dron inicia en la parte inferior del tablero.</li>
+        <li>Debes arrastrar bloques de programación al área de instrucciones.</li>
+        <li>El dron puede moverse, recoger agua en los lagos 💧 y apagar incendios 🔥.</li>
+        <li>El reto consiste en apagar todos los incendios antes de que se agote la batería.</li>
+      </ul>
+      <b>Nota:</b> Tienes 3 baterías por partida. Si las agotas todas, el simulador se reinicia pero se contará cuántas has perdido.
+    </div>
+
+    <h2>📚 Temas STEM</h2>
+    <div id="menuSTEM">
+      <button onclick="mostrarTema('ciencia')">🔬 Ciencia</button>
+      <button onclick="mostrarTema('tecnologia')">💻 Tecnología</button>
+      <button onclick="mostrarTema('ingenieria')">⚙️ Ingeniería</button>
+      <button onclick="mostrarTema('matematicas')">📐 Matemáticas</button>
+      <button onclick="mostrarTema('ciudadania')">🌱 Ciudadanía</button>
+<button onclick="mostrarTema('didactica')">📘 Unidad Didáctica</button>
+
+    </div>
+    <div id="contenidoSTEM">
+      Selecciona un tema para aprender cómo los incendios forestales en los cerros orientales se abordan desde la visión STEM.
+    </div>
+  </div>
+
+  <script>
+    const program = document.getElementById("program");
+    const workspace = document.getElementById("workspace");
+    const colLabels = document.getElementById("col-labels");
+    const rowLabels = document.getElementById("row-labels");
+    const statusDiv = document.getElementById("status");
+    const batteryBar = document.getElementById("battery-bar");
+    const contenidoSTEM = document.getElementById("contenidoSTEM");
+    const vidasDiv = document.getElementById("vidas");
+
+    let bateria = 100, apagados = 0, water = false;
+    let gridSize = 10, droneRow, droneCol;
+
+    // vidas y contador acumulado
+    let vidas = 3;
+    let bateriasAgotadas = 0;
+
+    // Contenidos STEM
+    const temas = {
+      ciencia: `<h3>🔬 Ciencia</h3><p>Los incendios forestales en los cerros orientales tienen causas naturales y humanas. La ciencia estudia sus efectos en aire, agua, suelo y biodiversidad.</p>`,
+      tecnologia: `<h3>💻 Tecnología</h3><p>La tecnología aporta drones con cámaras térmicas, satélites y apps de alerta temprana para vigilar y mitigar incendios.</p>`,
+      ingenieria: `<h3>⚙️ Ingeniería</h3><p>La ingeniería diseña cortafuegos, sistemas de riego y rutas óptimas para brigadas y drones.</p>`,
+      matematicas: `<h3>📐 Matemáticas</h3><p>Las matemáticas ayudan a calcular trayectorias, consumo de energía y probabilidades de riesgo de incendio.</p>`,
+      ciudadania: `<h3>🌱 Ciudadanía</h3><p>La ciudadanía puede prevenir incendios evitando fogatas, denunciando quemas y participando en campañas ambientales.</p>`,
+
+      didactica: `<h3>📘 Unidad Didáctica: Incendios en los Cerros de Bogotá</h3>
+      <p><b>Duración:</b> 80 minutos</p>
+      <h4>🎯 Objetivos</h4>
+      <ul>
+        <li>Programar secuencias, bucles y condicionales en el simulador.</li>
+        <li>Aplicar razonamiento matemático para optimizar rutas y batería.</li>
+        <li>Relacionar la tecnología con la prevención de incendios.</li>
+        <li>Reflexionar sobre la prevención y la acción ciudadana frente a problemáticas ambientales.</li>
+      </ul>
+      <h4>⏱️ Secuencia de la sesión</h4>  
+
+      <ol>
+        <li><b>Apertura (10 min):</b> Presentación de la misión “Salvar los cerros de Bogotá programando drones”.
+            <i><a href="">
+<a href="https://www.youtube.com/watch?v=0V2RCXRqD_8" title="Visualización de un video corto">Visualización de un video corto sobre los incendios en los cerros orientales </a>
+<li><b>Asignación de roles en equipos (10 min): Piloto, Programador, Analista, Reporteros </i></li></b>
+        <li><b>Exploración guiada (15 min):</b> Conocer los bloques y probar el simulador.</li>
+        <li><b>Reto 1 (15 min):</b> Programar el dron para apagar un incendio con instrucciones básicas.</li>
+        <li><b>Reto 2 (20 min):</b> Usar bucles y condiciones para optimizar la ruta y apagar todos los incendios.</li>
+        <li><b>Cierre y reflexión (20 min):</b> Discusión grupal sobre estrategias, eficiencia del código y relación con drones reales.</li>
+      </ol>
+      
+
+<h4>✅ Evaluación</h4>
+      <ul>
+        <li>Incendios apagados con el código programado.</li>
+        <li>Uso de estructuras de control (bucles y condicionales).</li>
+        <li>Participación en el diseño de la estrategia.</li>
+        <li>Reflexión escrita breve: ¿Cómo se relaciona la programación con la prevención real de incendios en los cerros orientales?
+.</li>
+      </ul>`,
+
+    };
+
+    function mostrarTema(t) {
+      contenidoSTEM.innerHTML = temas[t];
+    }
+
+    // ---------------- SIMULADOR -----------------
+    function generateGrid() {
+      const level = parseInt(document.getElementById("levelSelect").value);
+      let lakes = [], fires = [];
+
+      if(level === 1){
+        gridSize = 8;
+        lakes = [[2,2]];
+        fires = [[5,6]];
+      } else if(level === 2){
+        gridSize = 10;
+        lakes = [[3,4],[5,9]];
+        fires = [[8,5],[2,7]];
+      } else if(level === 3){
+        gridSize = 12;
+        lakes = [[2,3],[6,10],[9,2]];
+        fires = [[4,11],[11,8],[7,6]];
+      }
+
+      workspace.innerHTML = "";
+      colLabels.innerHTML = "";
+      rowLabels.innerHTML = "";
+
+      workspace.style.gridTemplateColumns = `repeat(${gridSize}, 50px)`;
+      workspace.style.gridTemplateRows = `repeat(${gridSize}, 50px)`;
+
+      colLabels.style.gridTemplateColumns = `repeat(${gridSize}, 50px)`;
+      rowLabels.style.gridTemplateRows = `repeat(${gridSize}, 50px)`;
+
+      for(let c=1; c<=gridSize; c++){
+        let label = document.createElement("div");
+        label.textContent = c;
+        colLabels.appendChild(label);
+      }
+      for(let r=1; r<=gridSize; r++){
+        let label = document.createElement("div");
+        label.textContent = r;
+        rowLabels.appendChild(label);
+      }
+      for (let r=1; r<=gridSize; r++) {
+        for (let c=1; c<=gridSize; c++) {
+          const cell = document.createElement("div");
+          cell.className = "cell";
+          cell.dataset.row = r;
+          cell.dataset.col = c;
+          workspace.appendChild(cell);
+        }
+      }
+      droneRow = gridSize; droneCol = 2;
+      placeInCell(droneRow, droneCol, "⚙️", "dron");
+      lakes.forEach(([r,c]) => placeInCell(r,c,"💧","lake"));
+      fires.forEach(([r,c]) => placeInCell(r,c,"🔥","fire"));
+
+      apagados = 0;
+      statusDiv.innerText = "Incendios apagados: 0";
+      bateria = 100; updateBattery();
+      actualizarVidas();
+    }
+
+    function actualizarVidas(){
+      vidasDiv.innerText = `Baterías restantes: ${vidas} | Baterías agotadas: ${bateriasAgotadas}`;
+    }
+
+    function placeInCell(row, col, icon, cls){
+      const cell = getCell(row,col);
+      cell.textContent = icon;
+      cell.classList.add(cls);
+    }
+    function getCell(row,col){
+      return workspace.querySelector(".cell[data-row='" + row + "'][data-col='" + col + "']");
+    }
+
+    document.querySelectorAll(".block").forEach(b => {
+      b.addEventListener("dragstart", e => {
+        e.dataTransfer.setData("text", e.target.innerText);
+      });
+    });
+    function drop(e) {
+      e.preventDefault();
+      const text = e.dataTransfer.getData("text");
+      const clone = document.createElement("div");
+      clone.className = "block";
+      clone.innerText = text;
+      clone.addEventListener("dblclick", ()=> clone.remove());
+      program.appendChild(clone);
+    }
+    function deleteLastBlock() {
+      const blocks = program.querySelectorAll(".block");
+      if (blocks.length > 0) blocks[blocks.length - 1].remove();
+    }
+    function clearProgram() {
+      program.innerHTML = "Arrastra aquí tus bloques";
+    }
+
+    function reiniciarTablero(){
+      generateGrid(); // reinicia solo tablero, mantiene vidas
+    }
+
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+    function updateBattery() {
+      batteryBar.style.width = bateria + "%";
+      if (bateria > 30) batteryBar.style.background = "green";
+      else if (bateria > 0) batteryBar.style.background = "yellow";
+      else batteryBar.style.background = "red";
+    }
+
+    async function runProgram(){
+      let blocks = Array.from(program.querySelectorAll(".block")).map(b=>b.innerText);
+      if(blocks[0] !== "Iniciar programa"){
+        alert("Debes iniciar con el bloque 'Iniciar programa'");
+        return;
+      }
+      for (let i=1; i<blocks.length; i++){
+        if (bateria <= 0) { 
+          manejarBateriaAgotada();
+          break; 
+        }
+        await execute(blocks[i]);
+      }
+    }
+
+    async function execute(cmd){
+      let currentCell = getCell(droneRow, droneCol);
+      currentCell.textContent = ""; currentCell.classList.remove("dron");
+
+      switch(cmd){
+        case "Repetir":
+          let veces = parseInt(prompt("¿Cuántas veces deseas repetir las siguientes instrucciones?"));
+          if (!isNaN(veces) && veces > 0) {
+            for (let r = 0; r < veces; r++) {
+              // Ejecuta las siguientes 2 instrucciones dentro del repetir
+              if (i + 1 < blocks.length) await execute(blocks[i + 1]);
+              if (i + 2 < blocks.length) await execute(blocks[i + 2]);
+            }
+            i += 2; // saltar las instrucciones ya ejecutadas dentro del repetir
+          }
+          break;
+        case "Si hay fuego":
+          let fireCell = getCell(droneRow, droneCol);
+          if (fireCell.classList.contains("fire") && water) {
+            // Ejecuta automáticamente descargar agua si hay fuego
+            await execute("Descargar agua");
+          }
+          break;
+
+        case "Avanzar": if (droneCol < gridSize) droneCol++; bateria -= 10; break;
+        case "Subir": if (droneRow > 1) droneRow--; bateria -= 10; break;
+        case "Bajar": if (droneRow < gridSize) droneRow++; bateria -= 10; break;
+        case "Girar derecha": bateria -= 5; break;
+        case "Girar izquierda": bateria -= 5; break;
+        case "Recoger agua":
+          let lake = getCell(droneRow, droneCol);
+          if(lake.classList.contains("lake")) { water = true; bateria = 100; }
+          break;
+        case "Descargar agua":
+          let fire = getCell(droneRow, droneCol);
+          if(water && fire.classList.contains("fire")){
+            fire.textContent = "✅";
+            fire.classList.remove("fire");
+            fire.classList.add("apagado");
+
+            // 🔥 aumentar el contador correctamente
+            apagados++;
+            statusDiv.innerText = "Incendios apagados: " + apagados;
+
+            if (document.querySelectorAll(".fire").length === 0) {
+              alert("¡Misión cumplida!");
+            }
+            water = false;
+          }
+          break;
+      }
+      placeInCell(droneRow, droneCol, "⚙️", "dron");
+      if (bateria < 0) bateria = 0;
+      updateBattery();
+      await sleep(800);
+
+      if (bateria === 0){
+        manejarBateriaAgotada();
+      }
+    }
+
+    function manejarBateriaAgotada(){
+      bateriasAgotadas++;
+      vidas--;
+      actualizarVidas();
+      alert("⚠️ La batería se agotó. Pierdes una vida.");
+      if (vidas <= 0){
+        alert("❌ Has agotado las 3 baterías. El simulador se reinicia.");
+        vidas = 3;
+        generateGrid();
+      } else {
+        bateria = 100;
+        updateBattery();
+      }
+    }
+
+    generateGrid();
+  </script>
+</body>
+</html>
+
+
+

@@ -1,0 +1,770 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Misión Marte — Exploración STEM (3 Misiones Secuenciales)</title>
+<style>
+/* Estilos CSS Mejorados para la Estructura Limpia */
+:root{
+  --accent:#ffb703; --muted:#9fbcd9; --good:#00ffb3; --danger:#ff4500;
+  --panel-bg: rgba(0,0,0,0.55); /* Panel más oscuro y definido */
+  --rover-color: #ffcc00;
+  --base-color: #00bfff;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter, "Segoe UI", Arial, sans-serif;background:linear-gradient(180deg,#04060a,#081822);color:#e6f7ff;overflow:hidden}
+header{padding:12px;text-align:center;background:linear-gradient(180deg,#061526,#072733);border-bottom:2px solid rgba(255,183,3,0.06)}
+h1{margin:0;color:var(--accent)}
+
+/* --- MEJORA CLAVE: Estructura del Layout Principal con 3 Columnas --- */
+main{
+  display:grid;
+  /* 280px para controles | El Viewport toma el espacio restante | 420px para laboratorio */
+  grid-template-columns: 280px 1fr 420px; 
+  gap:12px;
+  height:calc(100vh - 60px); 
+  padding:12px;
+}
+
+/* Columna Izquierda: HUD, Misiones, Controles */
+#left-column-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: 100%;
+    overflow-y: auto; /* Permite scroll en caso de mucho contenido */
+}
+
+/* Columna Central: Viewport/Simulación - AHORA COMPLETAMENTE LIMPIA */
+#viewport{
+    position:relative;background:#000;border-radius:10px;border:2px solid rgba(255,255,255,0.03);
+    overflow:hidden;
+    height: 100%; 
+}
+#background{position:absolute;inset:0;background-size:cover;background-position:center;filter:contrast(1.02) saturate(0.95);z-index:1}
+#overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0.18),rgba(0,0,0,0.45));pointer-events:none;z-index:2}
+canvas{position:absolute;left:0;top:0;z-index:5}
+
+/* El HUD YA NO ESTÁ EN EL VIEWPORT. Ahora es un panel en la columna izquierda. */
+.panel{background:var(--panel-bg);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);overflow:visible;}
+#hud.panel { padding: 16px; } /* Ajuste de padding para el panel principal */
+
+.hud-row{display:flex;justify-content:space-between;margin:8px 0;font-size:0.95rem;padding-bottom:2px;border-bottom:1px dotted rgba(255,255,255,0.1)}
+.stat{font-weight:700;color:var(--good)}
+
+.controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+button{background:var(--accent);color:#001;border:0;padding:8px 10px;border-radius:8px;cursor:pointer;font-weight:700; transition: background 0.2s;flex-grow:1;}
+button:hover { background: #ffc94e; }
+button.secondary{background:transparent;color:#e6f7ff;border:1px solid rgba(255,255,255,0.06);flex-grow:1;}
+button.danger{background:var(--danger);color:#fff}
+
+/* Columna Derecha: Laboratorio, Diagnóstico, Didáctica */
+#right-column-panels {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: 100%; 
+    overflow-y: auto; 
+    padding-bottom: 20px; 
+}
+
+/* Estilos de Muestras, Log y Diagnóstico (mantienen el estilo) */
+#sampleList .sample-card{
+    background:rgba(255,255,255,0.01);padding:8px;border-radius:8px;margin-bottom:8px;
+    border:1px solid rgba(255,255,255,0.02);
+    display: grid;
+    grid-template-columns: 1fr auto; /* Para separar el ID/Coords de los botones */
+    align-items: center;
+}
+#sampleList .sample-card > div:nth-child(2) {
+    grid-column: 1 / -1; 
+    margin-top: 4px;
+}
+#sampleList .sample-card > div:nth-child(3) {
+    grid-column: 1 / -1; 
+}
+#sampleList .sample-card .buttons {
+    display: flex; gap: 4px;
+}
+#sampleList .sample-card button { 
+    padding: 4px 8px; font-size: 0.85rem; flex-grow: 0;
+}
+
+#diagnosis textarea{width:100%;min-height:120px;border-radius:8px;padding:8px;border:1px solid rgba(255,255,255,0.04);background:rgba(0,0,0,0.5);color:#e6f7ff}
+#log{height:160px;overflow-y:auto;background:rgba(0,0,0,0.35);padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.02);font-size:0.9rem}
+
+/* Estilos para Misiones - Ahora más limpios */
+.mission{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);margin-bottom:6px;background:rgba(255,255,255,0.01)}
+.mission.locked{opacity:0.45}
+.mission .progress-bar {
+    height: 5px; background: rgba(255,255,255,0.1); border-radius: 3px; margin-top: 4px;
+}
+.mission .progress-fill {
+    height: 100%; background: var(--good); border-radius: 3px; transition: width 0.3s;
+}
+
+/* Popup - Se mantiene para notificaciones */
+.popup {
+  position: absolute;
+  left: 50%;
+  top: 10%; /* Más arriba, no estorba */
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.9);
+  color: #fff;
+  padding: 12px 18px;
+  border-radius: 10px;
+  border: 1px solid var(--accent);
+  z-index: 60;
+  display: none;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+}
+footer{position:fixed;right:12px;bottom:10px;font-size:0.85rem;color:var(--muted)}
+
+/* Media Query para pantallas pequeñas */
+@media (max-width:1200px){
+    main{
+        grid-template-columns: 1fr 380px; /* Ocultamos la columna izquierda en móvil/tablet y movemos el HUD al Viewport */
+        grid-template-rows: auto 1fr;
+        height: auto;
+    } 
+    #left-column-controls { 
+        display: none; 
+        grid-column: 1 / -1; 
+        grid-row: 3;
+    }
+    #viewport{
+        grid-column: 1 / 1; 
+        grid-row: 2;
+        min-height: 400px; 
+    }
+    #right-column-panels {
+        grid-column: 2 / 2;
+        grid-row: 1 / 3;
+    }
+    
+    /* Reintroducir HUD en el Viewport para móviles/tabletas, más pequeño */
+    #hud-mobile {
+        position: absolute; left: 8px; top: 8px;
+        background: var(--panel-bg); padding: 8px; border-radius: 8px;
+        z-index: 20; width: 220px;
+        display: block; /* Mostrar solo en vista móvil */
+    }
+    #hud-mobile .hud-row { margin: 4px 0; font-size: 0.85rem; border: none; padding: 0; }
+
+    /* Mover la introducción arriba del todo en vistas pequeñas */
+    #intro { grid-column: 1 / -1; }
+    
+    main { 
+        display: flex; /* Cambiar a flex para un mejor control del orden en móvil */
+        flex-direction: column; 
+    }
+    #right-column-panels { order: 3; }
+    #viewport { order: 2; }
+    #intro { order: 1; }
+    #left-column-controls { order: 4; display: flex; } /* Mostrar la columna izquierda al final */
+
+}
+@media (min-width:1201px) {
+    #hud-mobile { display: none; } /* Ocultar el HUD móvil en escritorio */
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Misión Marte — Exploración STEM (3 Misiones Secuenciales)</h1>
+  <div class="small">Completa las misiones en orden: Geología → Cazador de Agua → Astrobiólogo.</div>
+</header>
+
+<main>
+  <div id="left-column-controls">
+    <div id="hud" class="panel">
+      <h2>Estado Operacional</h2>
+      <div class="hud-row"><div>Rol:</div><div id="role" class="stat">Astronauta / Científico</div></div>
+      <div class="hud-row"><div>Coordenadas:</div><div id="coords" class="stat">0 , 0</div></div>
+      <div class="hud-row"><div>Batería:</div><div id="battery" class="stat">100%</div></div>
+      <div class="hud-row"><div>Muestras:</div><div id="count" class="stat">0</div></div>
+
+      <h3 style="margin-top:16px; margin-bottom: 6px;">Navegación</h3>
+      <div class="controls">
+        <button id="btnReturn" class="secondary">🏠 Volver a base</button>
+        <button id="btnTransmit" class="secondary" disabled>📡 Transmitir</button>
+      </div>
+      
+      <h3 style="margin-top:16px; margin-bottom: 6px;">Reporte</h3>
+      <div style="display:flex;gap:8px">
+        <button id="btnExport">📥 Exportar CSV</button>
+      </div>
+    </div>
+
+    <div class="panel">
+        <h2>Misiones</h2>
+        <div id="missionList"></div>
+    </div>
+  </div>
+
+  <div id="viewport">
+    <div id="background"></div>
+    <div id="overlay"></div>
+    <canvas id="world"></canvas>
+    
+    <div id="hud-mobile">
+        <div class="hud-row"><div>Batería:</div><div id="battery-m" class="stat">100%</div></div>
+        <div class="hud-row"><div>Muestras:</div><div id="count-m" class="stat">0</div></div>
+    </div>
+
+    <div id="popup" class="popup"></div>
+  </div>
+
+  <div id="right-column-panels">
+    <section id="intro" class="panel">
+      <h2>Exploración Espacial — Módulo STEM</h2>
+      <p class="small">Instrucciones: Usa **flechas** o **WASD** para mover el rover. Al acercarte a una roca no explorada recogerás una muestra. Regresa a la base para **recargar** y **transmitir**.</p>
+    </section>
+    
+    <div class="panel">
+      <h2>Laboratorio & Controles</h2>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <button id="btnAnalyze">🔬 Analizar</button>
+        <button id="btnClear" class="danger">🗑️ Vaciar</button>
+      </div>
+
+      <h3 class="small">Muestras recogidas (<span id="sample-count-lab">0</span>)</h3>
+      <div id="sampleList" style="margin-top:8px"></div>
+
+      <hr style="margin:10px 0">
+      <h3 class="small">Bitácora de Eventos</h3>
+      <div id="log"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Diagnóstico Científico (Informe Final)</h2>
+      <div id="diagnosis">
+        <textarea id="diagText" placeholder="Escribe aquí tu diagnóstico científico tras analizar muestras y cumplir las misiones..."></textarea>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button id="btnSaveDiag">💾 Guardar Diagnóstico</button>
+          <button id="btnClearDiag" class="secondary">✖ Limpiar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>© 2025 — Plataforma Educativa STEM — Exploración & Astrobiología</footer>
+
+<script>
+// --- CÓDIGO JAVASCRIPT REFINADO PARA INTEGRAR LA NUEVA UI ---
+
+const bg = document.getElementById('background');
+bg.style.backgroundImage = "url('https://mars.nasa.gov/system/resources/detail_files/776_PIA24428-web.jpg')";
+bg.style.backgroundColor = "#6b2f1a";
+bg.style.opacity = "0.98";
+
+const canvas = document.getElementById('world');
+const ctx = canvas.getContext('2d');
+
+let VIEW_W = 0;
+let VIEW_H = 0;
+
+/* World size */
+const WORLD_W = 3600, WORLD_H = 2400;
+
+/* Entities */
+let rover = { 
+  x: 600, y: 600, w: 18, h: 18, speed: 6, battery: 100, 
+  movingDrain: 0.25, 
+  idleDrain: 0.01,
+  solarCharge: 0.04 
+};
+let base = { x: 900, y: 800, r: 50 };
+let rocks = [];
+let samples = [];
+let lastAnalyzedSample = null;
+
+/* Missions (sequential) */
+const missions = [
+  { id: 1, title: 'Explorador Geológico', desc: 'Recolecta **5** muestras de suelo.', target: { samples: 5 }, progress: 0, done: false, unlocked: true },
+  { id: 2, title: 'Cazador de Agua', desc: 'Encuentra **3** muestras con agua > 60%.', target: { waterSamples: 3 }, progress: 0, done: false, unlocked: false },
+  { id: 3, title: 'Astrobiólogo', desc: 'Detecta **2** muestras con BioProb > 70% y regresa a base para **transmitir**.', target: { bioSamples: 2 }, progress: 0, done: false, unlocked: false }
+];
+
+/* Camera (type videojuego clásico: rover moves within viewport) */
+let camera = { x: 0, y: 0, w: 0, h: 0 };
+
+/* Input */
+let keys = {};
+let autoReturn = false;
+let transmitting = false;
+
+/* DOM refs - ACTUALIZADAS para la nueva UI */
+const dom = {
+  coords: document.getElementById('coords'), 
+  battery: document.getElementById('battery'), 
+  count: document.getElementById('count'),
+  batteryM: document.getElementById('battery-m'),
+  countM: document.getElementById('count-m'),
+  sampleList: document.getElementById('sampleList'), 
+  log: document.getElementById('log'), 
+  btnAnalyze: document.getElementById('btnAnalyze'),
+  btnReturn: document.getElementById('btnReturn'), 
+  btnClear: document.getElementById('btnClear'), 
+  btnExport: document.getElementById('btnExport'),
+  btnTransmit: document.getElementById('btnTransmit'), 
+  btnSaveDiag: document.getElementById('btnSaveDiag'), 
+  diagText: document.getElementById('diagText'),
+  missionList: document.getElementById('missionList'), 
+  popup: document.getElementById('popup'), 
+  sampleCountLab: document.getElementById('sample-count-lab')
+};
+
+// --- Core Functions ---
+function init(){
+  onResize(); 
+  generateRocks(110);
+  camera.x = Math.max(0, Math.min(WORLD_W - camera.w, rover.x - camera.w/2));
+  camera.y = Math.max(0, Math.min(WORLD_H - camera.h, rover.y - camera.h/2));
+  populateMissions();
+  bindEvents();
+  log('Misión iniciada. Base ubicada en ('+base.x+','+base.y+'). **Misión 1** desbloqueada.');
+  requestAnimationFrame(loop);
+}
+
+function generateRocks(n){
+  rocks = [];
+  for (let i=0;i<n;i++){
+    rocks.push({
+      id: 'R' + i,
+      x: 120 + Math.random() * (WORLD_W - 240),
+      y: 120 + Math.random() * (WORLD_H - 240),
+      r: 10 + Math.random() * 26,
+      explored: false
+    });
+  }
+}
+
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  camera.x = Math.max(0, Math.min(WORLD_W - camera.w, rover.x - camera.w/2));
+  camera.y = Math.max(0, Math.min(WORLD_H - camera.h, rover.y - camera.h/2));
+
+  const sx = wx => Math.round(wx - camera.x);
+  const sy = wy => Math.round(wy - camera.y);
+
+  // draw base
+  ctx.beginPath();
+  ctx.fillStyle = 'rgba(0, 191, 255, 0.1)';
+  ctx.arc(sx(base.x), sy(base.y), base.r + 10, 0, Math.PI*2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.fillStyle = 'var(--base-color)';
+  ctx.arc(sx(base.x), sy(base.y), base.r, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = '#001b26';
+  ctx.font = '14px Inter, sans-serif';
+  ctx.fillText('BASE', sx(base.x)-18, sy(base.y)+44);
+
+  // rocks
+  for (let rock of rocks){
+    const x = sx(rock.x), y = sy(rock.y);
+    if (x < -60 || x > canvas.width + 60 || y < -60 || y > canvas.height + 60) continue;
+    ctx.beginPath();
+    ctx.fillStyle = rock.explored ? '#2d6f39' : '#7a4b00';
+    ctx.arc(x, y, rock.r, 0, Math.PI*2);
+    ctx.fill();
+    // Proximity indicator
+    if (!rock.explored && Math.hypot(rover.x - rock.x, rover.y - rock.y) < 180) {
+      ctx.beginPath();
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+      ctx.arc(x, y, rock.r + 8, 0, Math.PI*2);
+      ctx.stroke();
+    }
+  }
+
+  // rover
+  const rx = sx(rover.x), ry = sy(rover.y);
+  ctx.save();
+  ctx.translate(rx, ry);
+  ctx.fillStyle = 'var(--rover-color)';
+  ctx.fillRect(-rover.w/2, -rover.h/2, rover.w, rover.h);
+  ctx.fillStyle = '#001';
+  ctx.fillRect(-4, -4, 8, 8);
+  ctx.restore();
+
+  // Mini info (mantenerlo para la UX)
+  ctx.fillStyle = 'rgba(0,0,0,0.22)';
+  ctx.fillRect(8, canvas.height - 30, 260, 24);
+  ctx.fillStyle = '#dbeeff';
+  ctx.font = '13px Inter, sans-serif';
+  ctx.fillText('Rover x:' + Math.round(rover.x) + ' y:' + Math.round(rover.y), 14, canvas.height - 13);
+}
+
+let lastTime = performance.now();
+function loop(now){
+  const dt = Math.min(0.05, (now - lastTime)/1000); 
+  lastTime = now;
+  update(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+
+function updateMovement(dt) {
+  let moving = false;
+  // (Lógica de movimiento del rover aquí)
+  if (autoReturn) {
+    navigateTo(base.x, base.y);
+    moving = true;
+  } else {
+    if (keys['ArrowUp'] || keys['w']) { rover.y -= rover.speed; moving = true; }
+    if (keys['ArrowDown'] || keys['s']) { rover.y += rover.speed; moving = true; }
+    if (keys['ArrowLeft'] || keys['a']) { rover.x -= rover.speed; moving = true; }
+    if (keys['ArrowRight'] || keys['d']) { rover.x += rover.speed; moving = true; }
+  }
+
+  rover.x = Math.max(20, Math.min(WORLD_W-20, rover.x));
+  rover.y = Math.max(20, Math.min(WORLD_H-20, rover.y));
+
+  return moving;
+}
+
+function updateBatteryAndBase(dt, moving) {
+  const atBase = isAtBase();
+  
+  // (Lógica de batería y base aquí)
+  if (atBase) {
+    rover.battery = Math.min(100, rover.battery + 0.9 * dt * 60);
+    dom.btnTransmit.disabled = samples.filter(s => !s.transmitted).length === 0;
+  } else {
+    if (moving) {
+      rover.battery = Math.max(0, rover.battery - rover.movingDrain * dt * 60);
+    } else {
+      rover.battery = Math.min(100, rover.battery + (rover.solarCharge - rover.idleDrain) * dt * 50);
+    }
+    dom.btnTransmit.disabled = true;
+  }
+  
+  if (rover.battery <= 10 && !atBase) {
+    if (!autoReturn) {
+      autoReturn = true; log('⚠️ Batería crítica (<10%): retorno automático activado.');
+      showPopup('Batería crítica: regresando a la base automáticamente.', 5000);
+    }
+  }
+  if (autoReturn && atBase) {
+    autoReturn = false; log('🔌 Rover en base. Recargando...');
+    showPopup('Rover en base. Recargando y listo para transmisión.', 3000);
+  }
+  
+  // Actualización de la UI
+  dom.battery.textContent = Math.round(rover.battery) + '%';
+  dom.batteryM.textContent = Math.round(rover.battery) + '%';
+  dom.coords.textContent = Math.round(rover.x) + ' , ' + Math.round(rover.y);
+
+  if (rover.battery <= 0 && !atBase) {
+      log('🛑 Batería agotada. Misión abortada.');
+      showPopup('Batería agotada. Misión abortada.', 5000);
+      keys = {}; 
+      autoReturn = false; 
+  }
+}
+
+function update(dt){
+  if (rover.battery <= 0 && !isAtBase()) return; 
+
+  const moving = updateMovement(dt);
+  updateBatteryAndBase(dt, moving);
+  
+  for (let rock of rocks){
+    const d = Math.hypot(rover.x - rock.x, rover.y - rock.y);
+    if (d < rock.r + 25 && !rock.explored){ 
+      collectSample(rock);
+      evaluateMissionsOnCollect(samples[samples.length-1]);
+    }
+  }
+  
+  dom.count.textContent = samples.length;
+  dom.countM.textContent = samples.length;
+  dom.sampleCountLab.textContent = samples.length;
+}
+
+function navigateTo(tx, ty){
+  // (Lógica de navegación aquí)
+  const dx = tx - rover.x, dy = ty - rover.y;
+  const dist = Math.hypot(dx, dy);
+  if (dist < base.r) return; 
+  rover.x += (dx/dist) * rover.speed * 0.9;
+  rover.y += (dy/dist) * rover.speed * 0.9;
+}
+
+function isAtBase(){
+  const d = Math.hypot(rover.x - base.x, rover.y - base.y);
+  return d < base.r + 15; 
+}
+
+function collectSample(rock){
+  // (Lógica de recolección de muestra aquí)
+  rock.explored = true;
+  const s = {
+    id: 'S' + Date.now().toString(36).slice(-6).toUpperCase(),
+    x: Math.round(rock.x), y: Math.round(rock.y),
+    water: +(Math.random()*90 + 5).toFixed(1),
+    methane: +(Math.random()*30).toFixed(2),
+    ph: +(5 + Math.random()*3).toFixed(2), 
+    temp: +( -70 + Math.random()*100 ).toFixed(1),
+    analyzed: false, transmitted: false, timestamp: new Date().toISOString()
+  };
+  samples.push(s); 
+  addSampleCard(s);
+  log('🪓 Muestra **' + s.id + '** recolectada en (' + s.x + ',' + s.y + ')');
+  showPopup(`Muestra ${s.id} recolectada.`);
+}
+
+function analyzeNextUnanalyzed() {
+  // (Lógica de análisis aquí)
+  const s = samples.find(sample => !sample.analyzed);
+  if (!s) { alert('No hay muestras **no analizadas** para procesar.'); return; }
+  
+  const bio = Math.round(Math.min(98, (
+    s.water * 0.35 + 
+    s.methane * 3 + 
+    (50 - Math.abs(7.5 - s.ph) * 8) + 
+    (s.temp > -20 && s.temp < 40 ? 20 : 0) 
+  ) / 2));
+  
+  s.analyzed = true; s.bioProb = bio;
+  lastAnalyzedSample = s;
+  updateSampleCard(s);
+  log(`🔬 Análisis **${s.id}**: Probabilidad de Vida (BioProb) **${bio}%**`);
+  evaluateMissionsOnAnalyze(s);
+}
+
+function transmit(){
+  // (Lógica de transmisión aquí)
+  if (!isAtBase()){ alert('Debes estar en la base para transmitir.'); return; }
+  if (samples.filter(s => !s.transmitted).length === 0){ alert('No hay nuevos datos para transmitir.'); return; }
+  if (transmitting) return;
+  transmitting = true;
+  dom.btnTransmit.disabled = true;
+  log('📡 Transmisión iniciada... (Espera)');
+  showPopup('Transmisión de datos en curso...', 2500);
+  setTimeout(()=> {
+    samples.forEach(s => s.transmitted = true);
+    transmitting = false;
+    log('✅ Transmisión completada. Datos enviados.');
+    showPopup('Transmisión completada.', 2500);
+    evaluateMissionsOnTransmit();
+  }, 1800);
+}
+
+// --- Missions Logic Refined ---
+function getMissionTargetCount(m){
+  if (m.target.samples) return m.target.samples;
+  if (m.target.waterSamples) return m.target.waterSamples;
+  if (m.target.bioSamples) return m.target.bioSamples;
+  return 0;
+}
+function calculateProgressPercentage(m) {
+    const target = getMissionTargetCount(m);
+    return target === 0 ? 0 : Math.min(100, (m.progress / target) * 100);
+}
+
+function populateMissions(){
+  dom.missionList.innerHTML = '';
+  for (let m of missions){
+    const div = document.createElement('div');
+    div.className = 'mission' + (m.unlocked ? '' : ' locked');
+    div.id = 'mission-' + m.id;
+    
+    if (m.id === 3 && m.unlocked && !m.done) {
+        m.progress = samples.filter(s => s.analyzed && s.bioProb > 70).length;
+    }
+    
+    const progressPercent = calculateProgressPercentage(m);
+
+    div.innerHTML = `<div style="font-weight:700">${m.title}</div><div class="small">${m.desc}</div>
+      <div class="small" style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;">
+        <span>Progreso: ${m.progress}/${getMissionTargetCount(m)}</span>
+        <span>${m.done ? '<strong style="color:var(--good)">✓ Completada</strong>' : (m.unlocked ? '<em>Activa</em>' : '<em>Bloqueada</em>')}</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width: ${progressPercent}%;"></div></div>`;
+    dom.missionList.appendChild(div);
+  }
+}
+
+/* Evaluate missions on events */
+function evaluateMissionsOnCollect(sample){
+  const m1 = missions[0];
+  if (m1.unlocked && !m1.done){
+    m1.progress = samples.length;
+    if (m1.progress >= getMissionTargetCount(m1)){
+      m1.done = true;
+      showPopup('Misión completada: ' + m1.title, 4000);
+      log('🎉 ' + m1.title + ' completada.');
+      missions[1].unlocked = true;
+      showPopup('Nueva misión desbloqueada: ' + missions[1].title, 4000);
+      log('🔓 ' + missions[1].title + ' desbloqueada.');
+    }
+  }
+  
+  const m2 = missions[1];
+  if (m2.unlocked && !m2.done){
+    m2.progress = samples.filter(s => s.water > 60).length; 
+    if (m2.progress >= getMissionTargetCount(m2)){
+      m2.done = true;
+      showPopup('Misión completada: ' + m2.title, 4000);
+      log('🎉 ' + m2.title + ' completada.');
+      missions[2].unlocked = true;
+      showPopup('Nueva misión desbloqueada: ' + missions[2].title, 4000);
+      log('🔓 ' + missions[2].title + ' desbloqueada.');
+    }
+  }
+  populateMissions();
+}
+
+function evaluateMissionsOnAnalyze(sample){
+  const m3 = missions[2];
+  if (m3.unlocked && !m3.done){
+    m3.progress = samples.filter(s => s.analyzed && s.bioProb > 70).length;
+    
+    if (m3.progress >= getMissionTargetCount(m3)){
+      showPopup('¡OBJETIVO CUMPLIDO! Regresa a base y **TRANSMITE** para completar la misión.', 5000);
+      log('✅ Objetivo de Astrobiólogo detectado. **Transmitir** desde base para finalizar.');
+    }
+  }
+  populateMissions();
+}
+
+function evaluateMissionsOnTransmit(){
+  const m3 = missions[2];
+  if (m3.unlocked && !m3.done){
+    if (m3.progress >= getMissionTargetCount(m3)){
+      m3.done = true;
+      showPopup('¡Misión completada: ' + m3.title + '! Campaña Científica Finalizada.', 5000);
+      log('🎉 ' + m3.title + ' completada. Primera campaña científica finalizada.');
+    } else {
+      showPopup('Transmisión exitosa, pero aún necesitas encontrar más muestras con alta BioProb para completar la Misión 3.', 5000);
+    }
+    populateMissions();
+  }
+}
+// ... [Implementaciones restantes de UI/UX] ...
+
+function addSampleCard(s){
+  const div = document.createElement('div'); div.className = 'sample-card'; div.id = 'card-' + s.id;
+  div.innerHTML = `<div><strong>${s.id}</strong> <span style="color:var(--muted)">[${s.x},${s.y}]</span></div>
+    <div class="small">Agua: ${s.water}% · Metano: ${s.methane} ppm · pH: ${s.ph} · T: ${s.temp}°C</div>
+    <div class="small" style="margin-top:6px">Analizada: ${s.analyzed? 'Sí' : 'No'} · ProbVida: <strong id="bio-${s.id}">${s.bioProb || '—'}</strong></div>
+    <div class="buttons"><button onclick="viewSample('${s.id}')" class="secondary">Ver</button> <button onclick="downloadSample('${s.id}')" class="secondary">CSV</button></div>`;
+  dom.sampleList.prepend(div);
+}
+function updateSampleCard(s){
+  const bioEl = document.getElementById('bio-' + s.id);
+  if (!bioEl) return;
+  bioEl.textContent = s.bioProb;
+  bioEl.style.color = s.bioProb>70 ? 'var(--good)' : 'var(--accent)';
+  const card = document.getElementById('card-' + s.id);
+  const dataEl = card.querySelector('div.small:nth-child(2)');
+  dataEl.innerHTML = `Agua: ${s.water}% · Metano: ${s.methane} ppm · pH: ${s.ph} · T: ${s.temp}°C`;
+}
+
+function viewSample(id){
+  const s = samples.find(x => x.id === id);
+  if (!s) return alert('Muestra no encontrada');
+  alert(`Muestra ${s.id}\nCoordenadas: ${s.x},${s.y}\nAgua: ${s.water}%\nMetano: ${s.methane} ppm\npH: ${s.ph}\nTemp: ${s.temp} °C\nAnalizada: ${s.analyzed? 'Sí' : 'No'}\nProbVida: ${s.bioProb || '—'}`);
+}
+function downloadSample(id){
+  const s = samples.find(x => x.id === id);
+  if (!s) return;
+  const header = ['id','x','y','water','methane','ph','temp','analyzed','bioProb','transmitted','timestamp'];
+  const row = [s.id,s.x,s.y,s.water,s.methane,s.ph,s.temp,s.analyzed?1:0,s.bioProb||'',s.transmitted?1:0,s.timestamp].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',');
+  const csv = [header.join(','), row].join('\n');
+  const blob = new Blob([csv],{type:'text/csv'}); const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `${s.id}_report.csv`; a.click(); URL.revokeObjectURL(url);
+}
+function clearSamples(){
+  if (!confirm('Eliminar todas las muestras?')) return;
+  samples = []; dom.sampleList.innerHTML = ''; 
+  dom.count.textContent = 0; dom.countM.textContent = 0; dom.sampleCountLab.textContent = 0;
+  log('🗑️ Todas las muestras eliminadas.');
+  missions.forEach(m => { 
+    m.progress = 0; m.done = false; 
+    m.unlocked = (m.id === 1); 
+  });
+  rocks.forEach(r => r.explored = false);
+  populateMissions();
+  showPopup('Muestras eliminadas. Misión 1 reiniciada.');
+}
+
+function saveDiagnosis(){
+  const text = dom.diagText.value.trim();
+  if (!text) return alert('Escribe tu diagnóstico antes de guardar.');
+  const name = `diagnostico_mision_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.txt`;
+  const blob = new Blob([text], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = name; a.click(); URL.revokeObjectURL(url);
+  log('💾 Diagnóstico guardado: ' + name);
+  showPopup('Diagnóstico guardado: ' + name);
+}
+
+function bindEvents(){
+  window.addEventListener('keydown', e => { keys[e.key] = true; if (e.key === ' ') e.preventDefault(); });
+  window.addEventListener('keyup', e => { keys[e.key] = false; });
+  window.addEventListener('resize', onResize);
+
+  dom.btnAnalyze.onclick = analyzeNextUnanalyzed;
+  dom.btnReturn.onclick = ()=>{ autoReturn = true; log('Autonavegación a base activada.'); showPopup('Autonavegación activada.'); };
+  dom.btnClear.onclick = clearSamples;
+  dom.btnExport.onclick = exportCSV;
+  dom.btnTransmit.onclick = transmit;
+  dom.btnSaveDiag.onclick = saveDiagnosis;
+  document.getElementById('btnClearDiag').onclick = ()=>{ dom.diagText.value = ''; };
+}
+function exportCSV(){
+  if (samples.length === 0) { alert('No hay muestras para exportar.'); return; }
+  const header = ['id','x','y','water(%)','methane(ppm)','pH','temp(C)','analyzed','bioProb','transmitted','timestamp'];
+  const lines = samples.map(s => [s.id,s.x,s.y,s.water,s.methane,s.ph,s.temp,s.analyzed?1:0,s.bioProb||'',s.transmitted?1:0,s.timestamp].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(','));
+  const csv = [header.join(',')].concat(lines).join('\n');
+  const blob = new Blob([csv],{type:'text/csv'}); const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `muestras_mision_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.csv`; a.click(); URL.revokeObjectURL(url);
+  log('📥 CSV descargado.');
+}
+function log(msg){
+  const now = new Date().toLocaleTimeString();
+  dom.log.innerHTML = `<div>[${now}] ${msg}</div>` + dom.log.innerHTML;
+}
+let popupTimer = null;
+function showPopup(text, ms = 3000){
+  const p = dom.popup;
+  p.innerText = text; p.style.display = 'block';
+  if (popupTimer) clearTimeout(popupTimer);
+  popupTimer = setTimeout(()=>{ p.style.display = 'none'; }, ms);
+}
+
+function onResize(){
+  const viewportContainer = document.getElementById('viewport');
+  // Se obtiene el tamaño real del contenedor padre (viewport)
+  VIEW_W = viewportContainer.clientWidth;
+  VIEW_H = viewportContainer.clientHeight;
+
+  // Se asigna el tamaño al canvas
+  canvas.width = VIEW_W; canvas.height = VIEW_H;
+  canvas.style.width = VIEW_W + 'px'; canvas.style.height = VIEW_H + 'px';
+  
+  // Actualizar la cámara
+  camera.w = VIEW_W; camera.h = VIEW_H;
+  camera.x = Math.max(0, Math.min(WORLD_W - camera.w, rover.x - camera.w/2));
+  camera.y = Math.max(0, Math.min(WORLD_H - camera.h, rover.y - camera.h/2));
+}
+
+/* Expose view/download functions */
+window.viewSample = viewSample;
+window.downloadSample = downloadSample;
+window.exportCSV = exportCSV;
+window.clearSamples = clearSamples;
+window.transmit = transmit;
+window.saveDiagnosis = saveDiagnosis;
+
+/* Start */
+init();
+</script>
+</body>
+</html>
