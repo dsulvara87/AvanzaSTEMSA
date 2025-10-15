@@ -1,2 +1,2 @@
 # AvanzaSTEMSA
-Ambiente computacional sin andamiaje metacognitivos
+Ambiente computacional sin andamiaje metacognitivo
